@@ -1,0 +1,9 @@
+* MG Series
+** time series with free parameters
+*** Ended up that the model just kept emulating the input
+
+** time series with fixed parameters
+*** still ended up models emulating inputs.
+*** Adding additional epochs evens everything out to a single line
+*** Will try training with less time steps improve accuracy?
+(Check if the weird tile thing is causing the network to break down?)
