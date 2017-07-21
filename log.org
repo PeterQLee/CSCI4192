@@ -7,3 +7,36 @@
 *** Adding additional epochs evens everything out to a single line
 *** Will try training with less time steps improve accuracy?
 (Check if the weird tile thing is causing the network to break down?)
+
+Major problem earlier was a large set of the data was 0'd. Probably won't fix the drop off effect however.
+Edit: this was the problem. Can now predict t=1 ahead
+
+*** Possible repeats in test dataset? Examine this
+
+*** Now that this is working, try additional layers
+Doubling layers added no visual benefit
+
+*** GRU
+Quite interestingly, it seems that the GRU is outperforming the LSTM.
+More investigation needed (compare with metrics, try different delays).
+Try different # of hidden nodes
+
+*** Update: GRU may not be better
+I was using BasicLSTM earlier, which is likely what caused the increased performance since that version doesn't use gradient clipping and everything.
+
+For n=4, lstm still looks bad...
+* Graph possibilities
+** Plot difference in derivatives?
+** Ignore t=0
+
+Possible Pre-training based on previous time series to make things faster.
+
+
+** Trap meeting
+*** COntinue finding better ways to graph
+*** Compare with that other paper, similar parameters
+*** Effect of having similar number of parameters.
+
+* Try LSTM with a smaller learning rate!!!
+(Everything using 5e-4 learning rate.
+Need to make a system to adapt to stale errors

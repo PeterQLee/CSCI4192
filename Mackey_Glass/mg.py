@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 from collections import deque
-from models import LSTM, GRU
+from models import LSTM, GRU, reset_graph
 import matplotlib.pyplot as plt
 import statsmodels.tsa.arima_model
 import sys
@@ -63,10 +63,60 @@ class MG_Series:
         np.save('/mnt/D2/Chaos/mg/mgset_10.npy',Y)
         np.save('/mnt/D2/Chaos/mg/params_10.npy',params)
 
+def bisect_set(train,test,ahead,spacing=100):
+    v=train.shape[1]
+    trainx,trainy=train[:,:v-ahead*spacing],train[:,ahead*spacing:]
+    testx,testy=test[:,:v-ahead*spacing],test[:,ahead*spacing:]
+    return trainx,trainy,testx,testy
+
+def run_models():
+    base='/mnt/D2/Chaos/mg/lng/rand'
+    
+    for i in [1,3,5]:
+
+        trainx=np.zeros((660,5000-i*100))
+        trainy=np.zeros((660,5000-i*100))
+        testx=np.zeros((660//30,5000-i*100))
+        testy=np.zeros((660//30,5000-i*100))
+        for j in range(0,660,30):
+            #let=np.random.choice(np.arange(26))
+            letter=chr(ord('A')+j//30)
+            train=np.load('{}/train_code{}.npy'.format(base,letter))
+            test=np.load('{}/test_code{}.npy'.format(base,letter))
+            tRx,tRy,tex,tey=bisect_set(train[:30],test[:1],i)
+            trainx[j:j+30]=tRx
+            trainy[j:j+30]=tRy
+            testx[j//30]=tex[:1]
+            testy[j//30]=tey[:1]
+        reset_graph()
+        model=LSTM(1,1)
+        err=model.train(trainx,trainy)
+
+        predy=model.predict(testx)
+        np.save('{}/testx_{}'.format(base,i),testx)
+        np.save('{}/testy_{}'.format(base,i),testy)
+        np.save('{}/LSTM_{}_H64.npy'.format(base,i),predy)
+        np.save('{}/LSTM_{}err_H64.npy'.format(base,i),err)
+
+        reset_graph()
+        model=GRU(1,1)
+        err=model.train(trainx,trainy)
+
+        predy=model.predict(testx)
+        np.save('{}/GRU_{}_H64.npy'.format(base,i),predy)
+        np.save('{}/GRU_{}err_H64.npy'.format(base,i),err)
+
+
 if __name__=='__main__':
     INCREMENT=5
+
+
     if sys.argv[1]=='generate':
         MG_Series().generate(10)
+
+    if sys.argv[1]=='multi':
+        run_models()
+        
     elif sys.argv[1]=='LSTM':
         #LSTM 
         data=np.load('/mnt/D2/Chaos/mg/mgset.npy')
@@ -157,40 +207,118 @@ if __name__=='__main__':
             plt.savefig('/mnt/D2/Chaos/mg/{}/{}.png'.format(INCREMENT,i))
             plt.clf()
     elif sys.argv[1]=='lng_LSTM':
+        INCREMENT=5
         outdir='/mnt/D2/Chaos/mg/'
-        trainx=np.load('{}/lng/trainx.npy'.format(outdir))
-        trainy=np.load('{}/lng/trainy.npy'.format(outdir))
-        testx=np.load('{}/lng/testx.npy'.format(outdir))
-        testy=np.load('{}/lng/testy.npy'.format(outdir))
+        trainx=np.load('{}/lng/trainx_a{}.npy'.format(outdir,INCREMENT))
+        trainy=np.load('{}/lng/trainy_a{}.npy'.format(outdir,INCREMENT))
+        testx=np.load('{}/lng/testx_a{}.npy'.format(outdir,INCREMENT))
+        testy=np.load('{}/lng/testy_a{}.npy'.format(outdir,INCREMENT))
 
         model=LSTM(1,1)
         model.reset()
         
         
-        err=model.train(trainx,trainy,ep=3)
+        err=model.train(trainx,trainy,ep=1)
         
         predy=model.predict(testx)
 
-        INCREMENT=1
 
-        np.save('{}/lng/LSTM_3.npy'.format(outdir),predy)
-        np.save('{}/lng/LSTM_3err.npy'.format(outdir),err)
-    elif sys.argv[1]=='lng_plot':
+        #print(predy.shape)
+        np.save('{}/lng/LSTM_{}_H64.npy'.format(outdir,INCREMENT),predy)
+        np.save('{}/lng/LSTM_{}err_H64.npy'.format(outdir,INCREMENT),err)
+
+    elif sys.argv[1]=='lng_GRU':
+        INCREMENT=3
         outdir='/mnt/D2/Chaos/mg/'
-        testx=np.load('{}/lng/testx.npy'.format(outdir))
-        testy=np.load('{}/lng/testy.npy'.format(outdir))
-        predy=np.load('{}/lng/LSTM_3.npy'.format(outdir))
-        for i in range(len(testx)):
+        trainx=np.load('{}/lng/trainx_a{}.npy'.format(outdir,INCREMENT))
+        trainy=np.load('{}/lng/trainy_a{}.npy'.format(outdir,INCREMENT))
+        testx=np.load('{}/lng/testx_a{}.npy'.format(outdir,INCREMENT))
+        testy=np.load('{}/lng/testy_a{}.npy'.format(outdir,INCREMENT))
+
+        model=GRU(1,1)
+        model.reset()        
         
-            sb=plt.subplot(211)
-            #plt.title('x0={:.4f}, rho={:.4f}, beta={:.4f}, tau={:.4f}, n={:.4f}'.format(*params[i]))
-            x_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),testy[i],'--',color='blue',label='x(t+{})'.format(INCREMENT))
-            p_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),predy[i],'-',label='p(t+{})'.format(INCREMENT),color='red')
-            plt.legend(handles=[x_t_5,p_t_5])
+        err=model.train(trainx,trainy,ep=1)
+        
+        predy=model.predict(testx)
+
+        np.save('{}/lng/GRU_{}_H64.npy'.format(outdir,INCREMENT),predy)
+        np.save('{}/lng/GRU_{}err_H64.npy'.format(outdir,INCREMENT),err)
+        
+    elif sys.argv[1]=='lng_plot':
+        import scipy
+        INCREMENT=3
+        mname='GRU'
+        outdir='/mnt/D2/Chaos/mg/'
+        testx=np.load('{}/lng/testx_a{}.npy'.format(outdir,INCREMENT))
+        testy=np.load('{}/lng/testy_a{}.npy'.format(outdir,INCREMENT))
+        #testx=np.load('{}/lng/testx_a{}.npy'.format(outdir,INCREMENT))
+        #testy=np.load('{}/lng/testy_a{}.npy'.format(outdir,INCREMENT))
+
+
+        predy=np.load('{}/lng/rand/{}_{}_H64.npy'.format(outdir,mname,INCREMENT))
+        #predy=np.load('{}/lng/{}_{}_H64.npy'.format(outdir,mname,INCREMENT))
+        #predy=np.load('{}/lng/GRU_{}_H64.npy'.format(outdir,INCREMENT))
+        params=[0.1,1.0,2.0,2.0,9.65]
+        style='grad'
+        for i in range(len(testx)):
             
-            sb=plt.subplot(212)
-            p_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),predy[i],'-',label='p(t+{})'.format(INCREMENT),color='red')
-            x_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),testx[i],'--',label='x(t)',color='green')
-            plt.legend(handles=[p_t_5,x_5])
-            
-            plt.show()
+            if style=='old':
+                sb=plt.subplot(211)
+                #plt.title('x0={:.4f}, rho={:.4f}, beta={:.4f}, tau={:.4f}, n={:.4f}'.format(*params[i]))
+                x_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),testy[i],'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                p_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),predy[i],'-',label='p(t+{})'.format(INCREMENT),color='red')
+                plt.legend(handles=[x_t_5,p_t_5])
+
+                sb=plt.subplot(212)
+                p_t_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),predy[i],'-',label='p(t+{})'.format(INCREMENT),color='red')
+                x_5,=plt.plot(np.linspace(0,testx[i].shape[0]//100,testx[i].shape[0]),testx[i],'--',label='x(t)',color='green')
+                plt.legend(handles=[p_t_5,x_5])
+
+                plt.show()
+            elif style=='grad':
+               
+                dp_dt=np.gradient(predy[i].flatten())
+                dy_dt=np.gradient(testy[i].flatten())
+                plt.suptitle('{} delayed by {}'.format(mname,INCREMENT))
+                sb=plt.subplot(221)
+                plt.title('$x_0$={:.2f}, $\\rho$={:.2f}, $\\beta$={:.2f}, $\\tau$={:.2f}, n={:.2f}'.format(*params))
+                
+                plt.ylabel('f')
+                plt.xlabel('t')
+                c=20
+                x_t_5,=plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],testy[i][c:],'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                p_t_5,=plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],predy[i][c:],'-',label='p(t+{})'.format(INCREMENT),color='red')
+                plt.legend(handles=[x_t_5,p_t_5])
+                plt.subplot(222)
+                plt.ylabel('$|x-p|$'.format(INCREMENT,INCREMENT))
+                plt.xlabel('t')
+
+                plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],np.abs(predy[i].flatten()[c:]-testy[i].flatten()[c:]),'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                plt.title('$\int |x-p| = {:.4f}$'.format(
+                    np.sum(np.abs(predy[i].flatten()[c:]-testy[i].flatten()[c:]))/testx[i][c:].shape[0]))
+                #plt.legend(handles=[x_t_5])
+                
+                sb=plt.subplot(223)
+                plt.ylabel('$\\frac{df}{dt}$')
+                plt.xlabel('t')
+                x_t_5,=plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],dy_dt[c:],'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                p_t_5,=plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],dp_dt[c:],'-',label='p(t+{})'.format(INCREMENT),color='red')
+                plt.legend(handles=[x_t_5,p_t_5])
+
+                sb=plt.subplot(224)
+                plt.ylabel('$| \\frac{dx}{dt}-\\frac{dp}{dt}|$')
+                # x_t_5,=plt.plot(np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:],np.abs(dy_dt[c:]-dp_dt[c:]),'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                t=np.linspace(0.,testx[i].shape[0]//100,testx[i].shape[0])[c:]
+                #v=np.array([0]+list(scipy.integrate.cumtrapz(np.abs(dy_dt[c:]-dp_dt[c:]),t)))
+                v=np.cumsum(np.abs(dy_dt[c:]-dp_dt[c:]))/30
+                print(t.shape,v.shape)
+                x_t_5,=plt.plot(t,v,'--',color='blue',label='x(t+{})'.format(INCREMENT))
+                
+                plt.title('$\\int |\\frac{{dx}}{{dt}}-\\frac{{dp}}{{dt}}| = {:.4f}$'.format(
+                    np.sum(np.abs(dy_dt[c:]-dp_dt[c:]))/30.))
+
+                #plt.tight_layout()
+                #plt.savefig('{}/lng/figures/{}_{}.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
+                #break
+                plt.show()
