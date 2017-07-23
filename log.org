@@ -40,3 +40,5 @@ Possible Pre-training based on previous time series to make things faster.
 * Try LSTM with a smaller learning rate!!!
 (Everything using 5e-4 learning rate.
 Need to make a system to adapt to stale errors
+
+* Need to fix learning rate things, or do more epochs of training. Currently models are not fitting well.

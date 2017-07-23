@@ -1,5 +1,7 @@
 from collections import deque
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 E=deque()
 def x_t(tt):
@@ -91,7 +93,7 @@ def full_set(tl=2000,incrange=20,params=None):
 if __name__=='__main__':
     import os
     #Variable beta
-    outdir='/mnt/D2/Chaos/mg/lng/stable/'
+    outdir='/mnt/D2/Chaos/mg/lng/stable/L50/'
     os.makedirs(outdir,exist_ok=True)
     i='A'
     #for i in range(10):
@@ -101,7 +103,7 @@ if __name__=='__main__':
     n=9.65
         #params=[beta,rho,tau,n]
     params=None
-    X=full_set(tl=8000,incrange=30,params=params)
+    X=full_set(tl=30000,incrange=50,params=params)
     plt.plot(np.arange(3000),X[3000:6000])
     plt.savefig('{}/{}.png'.format(outdir,i))
     np.save('{}/data{}.npy'.format(outdir,i),X)
@@ -145,3 +147,4 @@ if __name__=='__main__':
     #np.save('{}/inds_a{}'.format(outdir,ahead),inds)
 
 #error with exponential curve wrt time
+
