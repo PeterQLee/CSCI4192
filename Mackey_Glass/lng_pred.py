@@ -85,7 +85,7 @@ def bisect_training_test(tl=2000,incrange=20,ahead=1,params=None):
     return (trainX,testX,inds)
 
 def full_set(tl=2000,incrange=20,params=None):
-    x0=0.1
+    x0=1.2
     ns=tl*100
     T,X=runge_kutta(x0,tl,ns,params)
     return X
@@ -93,17 +93,36 @@ def full_set(tl=2000,incrange=20,params=None):
 if __name__=='__main__':
     import os
     #Variable beta
-    outdir='/mnt/D2/Chaos/mg/lng/stable/L50/'
+    # outdir='/mnt/D2/Chaos/mg/lng/beta/L50/'
+    # os.makedirs(outdir,exist_ok=True)
+    # i='A'
+    
+    # #Beta
+    # for i_ in range(10):
+    #     i=chr(ord('K')+i_)
+    #     beta=np.random.uniform(low=1,high=10,size=1)
+    #     rho=1
+    #     tau=10
+    #     n=9.65
+    #     params=[beta,rho,tau,n]
+    #     X=full_set(tl=30000,incrange=50,params=params)
+    #     plt.plot(np.arange(3000),X[3000:6000])
+    #     plt.savefig('{}/{}.png'.format(outdir,i))
+    #     np.save('{}/data{}.npy'.format(outdir,i),X)
+    #     np.save('{}/bval{}.npy'.format(outdir,i),params)
+    #     plt.clf()
+    
+    #Stable
+    outdir='/mnt/D2/Chaos/mg/lng/stable2/L50/'
     os.makedirs(outdir,exist_ok=True)
     i='A'
-    #for i in range(10):
-    beta=np.random.uniform(low=1,high=10,size=1)
-    rho=np.random.uniform(low=1,high=10,size=1)
-    tau=np.random.uniform(low=1,high=10,size=1)
-    n=9.65
-        #params=[beta,rho,tau,n]
-    params=None
-    X=full_set(tl=30000,incrange=50,params=params)
+    
+    beta=0.2
+    rho=0.1
+    tau=17
+    n=10
+    params=[beta,rho,tau,n]
+    X=full_set(tl=1000,incrange=50,params=params)
     plt.plot(np.arange(3000),X[3000:6000])
     plt.savefig('{}/{}.png'.format(outdir,i))
     np.save('{}/data{}.npy'.format(outdir,i),X)

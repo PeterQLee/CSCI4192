@@ -20,27 +20,31 @@ class Network:
         batchsize=20
         self.sess.run(tf.global_variables_initializer())
         train_step,error=[self.retrieve[i] for i in ['train_step','error']]
+        all_acc=[]
         #Prep learning rates
-        learnrates=[1e-3 for i in range(X_T.shape[0]//2)] + [1e-4 for i in range(X_T.shape[0]//3)] + [1e-5 for i in range(X_T.shape[0]-(X_T.shape[0]//2+X_T.shape[0]//3))]
-        self.Q_fetch.enqueue_data((X_T.reshape(X_T.shape[0],X_T.shape[1],1),Y_T.reshape(Y_T.shape[0],Y_T.shape[1],1),learnrates),[],batchsize=batchsize,shuffle=False)
-        all_acc=np.zeros(X_T.shape[0]*ep)
-        for e in range(ep):
-            self.Q_fetch.training_event.wait()
+        # learnrates=[1e-3 for i in range(X_T.shape[0]//2)] + [1e-4 for i in range(X_T.shape[0]//3)] + [1e-5 for i in range(X_T.shape[0]-(X_T.shape[0]//2+X_T.shape[0]//3))]
+        # self.Q_fetch.enqueue_data((X_T.reshape(X_T.shape[0],X_T.shape[1],1),Y_T.reshape(Y_T.shape[0],Y_T.shape[1],1),learnrates),[],batchsize=batchsize,shuffle=False)
 
-            self.Q_fetch.start_epoch()
-            for i in range(0,len(X_T),batchsize):
-                _,acc=self.sess.run([train_step,error])
-                print('donewait')
-                all_acc[e*len(X_T)+i]=acc
+        # for e in range(ep):
+        #     self.Q_fetch.training_event.wait()
 
-        #Do smaller portion with a batchsize of 1
-        X_tt=X_T[:100]
-        Y_tt=Y_T[:100]
+        #     self.Q_fetch.start_epoch()
+        #     for i in range(0,len(X_T),batchsize):
+        #         _,acc=self.sess.run([train_step,error])
+        #         print('donewait')
+        #         all_acc.append(acc)
+
+        # #Do smaller portion with a batchsize of 1
+        # X_tt=X_T[:100]
+        # Y_tt=Y_T[:100]
+        X_tt=X_T
+        Y_tt=Y_T
         batchsize=1
         #Prep learning rates
-        learnrates=[1e-3 for i in range(X_tt.shape[0]//2)] + [1e-4 for i in range(X_tt.shape[0]//3)] + [1e-5 for i in range(X_tt.shape[0]-(X_tt.shape[0]//2+X_tt.shape[0]//3))]
+        learnrates=[1e-3 for i in range(X_tt.shape[0])] 
+        #learnrates=[1e-3 for i in range(X_tt.shape[0]//2)] + [1e-4 for i in range(X_tt.shape[0]//3)] + [1e-5 for i in range(X_tt.shape[0]-(X_tt.shape[0]//2+X_tt.shape[0]//3))]
         self.Q_fetch.enqueue_data((X_tt.reshape(X_tt.shape[0],X_tt.shape[1],1),Y_tt.reshape(Y_tt.shape[0],Y_tt.shape[1],1),learnrates),[],batchsize=batchsize,shuffle=False)
-        all_acc=np.zeros(X_tt.shape[0]*ep)
+
         for e in range(ep):
             self.Q_fetch.training_event.wait()
 
@@ -48,10 +52,11 @@ class Network:
             for i in range(0,len(X_tt),batchsize):
                 _,acc=self.sess.run([train_step,error])
                 print('donewait')
-                all_acc[e*len(X_tt)+i]=acc
+                #all_acc[e*len(X_tt)+i]=acc
+                all_acc.append(acc)
 
         self.Q_fetch.stop()
-        return all_acc
+        return np.array(all_acc)
 
     def predict(self,Xt):
         output=self.retrieve['output']
@@ -83,7 +88,6 @@ class BLSTM (Network):
         #X=tf.placeholder(tf.float32,shape=[None,None,n_in])
         #Y_=tf.placeholder(tf.float32,shape=[None,n_out])
 
-        lstm_size=64
         lstm=tf.contrib.rnn.BasicLSTMCell(lstm_size)
         lstm1=tf.contrib.rnn.BasicLSTMCell(lstm_size)
         stacklstm=tf.contrib.rnn.MultiRNNCell([lstm,lstm1],state_is_tuple=True)
@@ -106,12 +110,11 @@ class LSTM (Network):
         self.n_in=n_in
         X,Y_,learnrate=self.Q_fetch.Q.dequeue()
         X.set_shape([None, None, n_in])
-        Y_.set_shape([ None, n_out])
+        Y_.set_shape([None, None, n_out])
         learnrate=learnrate[0]
         #X=tf.placeholder(tf.float32,shape=[None,None,n_in])
         #Y_=tf.placeholder(tf.float32,shape=[None,n_out])
 
-        lstm_size=64
         lstm=tf.contrib.rnn.LSTMCell(lstm_size)
         lstm1=tf.contrib.rnn.LSTMCell(lstm_size)
         stacklstm=tf.contrib.rnn.MultiRNNCell([lstm,lstm1],state_is_tuple=True)
@@ -121,7 +124,17 @@ class LSTM (Network):
         V=tf.reshape(tf.tile(V,[tf.shape(rnout)[0],1]),[-1,lstm_size,1])
         output=tf.matmul(rnout,V)+Bv #Linear unit
         error=tf.reduce_mean(tf.square(output-Y_))
-        train_step=tf.train.AdamOptimizer(learnrate).minimize(error)
+
+        # lambda_l2_reg=0.1
+        # l2 = lambda_l2_reg * sum(
+        #         tf.nn.l2_loss(tf_var)
+        #             for tf_var in tf.trainable_variables()
+        #     if not ("noreg" in tf_var.name or "Bias" in tf_var.name or 'B' in tf_var.name)
+        # )
+        
+        # E=error+l2
+        E=error
+        train_step=tf.train.AdamOptimizer(learnrate).minimize(E)
 
         rlist=[output,error,train_step,X,Y_,self.input_Q,self.label_Q]
         rname=['output','error','train_step','X','Y_','input_Q','label_Q']
@@ -129,16 +142,15 @@ class LSTM (Network):
         self.retrieve=dict(zip(rname,rlist))
 
 class GRU (Network):
-    def __init__(self,n_in,n_out):
+    def __init__(self,n_in,n_out,lstm_size):
         super().__init__(n_in,n_out)
         self.n_in=n_in
         X,Y_,learnrate=self.Q_fetch.Q.dequeue()
 
         X.set_shape([None, None, n_in])
-        Y_.set_shape([ None, n_out])
+        Y_.set_shape([None, None, n_out])
         learnrate=learnrate[0]
 
-        lstm_size=64
         lstm=tf.contrib.rnn.GRUCell(lstm_size)
         lstm1=tf.contrib.rnn.GRUCell(lstm_size)
         stacklstm=tf.contrib.rnn.MultiRNNCell([lstm,lstm1],state_is_tuple=True)
@@ -148,7 +160,17 @@ class GRU (Network):
         V=tf.reshape(tf.tile(V,[tf.shape(rnout)[0],1]),[-1,lstm_size,1])
         output=tf.matmul(rnout,V)+Bv #Linear unit
         error=tf.reduce_mean(tf.square(output-Y_))
-        train_step=tf.train.AdamOptimizer(learnrate).minimize(error)
+        # lambda_l2_reg=0.1
+        # l2 = lambda_l2_reg * sum(
+        #         tf.nn.l2_loss(tf_var)
+        #             for tf_var in tf.trainable_variables()
+        #     if not ("noreg" in tf_var.name or "Bias" in tf_var.name or 'B' in tf_var.name)
+        # )
+        
+        # E=error+l2
+        E=error
+
+        train_step=tf.train.AdamOptimizer(learnrate).minimize(E)
 
         rlist=[output,error,train_step,X,Y_,self.input_Q,self.label_Q]
         rname=['output','error','train_step','X','Y_','input_Q','label_Q']
@@ -203,7 +225,18 @@ class Elman():
         y=tf.transpose(tf.matmul(H2,W3)+B3,[1,0,2])
 
         error=tf.reduce_mean(tf.square(y-Y_))
-        train_step=tf.train.AdamOptimizer(learnrate).minimize(error)
+        # lambda_l2_reg=0.1
+        # l2 = lambda_l2_reg * sum(
+        #         tf.nn.l2_loss(tf_var)
+        #             for tf_var in tf.trainable_variables()
+        #     if not ("noreg" in tf_var.name or "Bias" in tf_var.name or 'B' in tf_var.name)
+        # )
+        
+        # E=error+l2
+
+        E=error
+        train_step=tf.train.AdamOptimizer(learnrate).minimize(E)
+        
 
         self.retrieve={'train_step':train_step,'error':error,'X':X,'Y_':Y_,'learnrate':learnrate,'y':y,'W3':W3,'H2':H2}
         self.sess=tf.Session()
@@ -223,50 +256,49 @@ class Elman():
         batchsize=10
         self.sess.run(tf.global_variables_initializer())
         train_step,error=[self.retrieve[i] for i in ['train_step','error']]
+        all_acc=[]
         #Prep learning rates
-        learnrates=[1e-3 for i in range(X_T.shape[0]//2)] + [1e-4 for i in range(X_T.shape[0]//3)] + [1e-5 for i in range(X_T.shape[0]-(X_T.shape[0]//2+X_T.shape[0]//3))]
+        # learnrates=[1e-3 for i in range(X_T.shape[0]//2)] + [1e-4 for i in range(X_T.shape[0]//3)] + [1e-5 for i in range(X_T.shape[0]-(X_T.shape[0]//2+X_T.shape[0]//3))]
 
-        sdat=(X_T.reshape(X_T.shape[0],X_T.shape[1],1),Y_T.reshape(Y_T.shape[0],Y_T.shape[1],1),learnrates)
+        # sdat=(X_T.reshape(X_T.shape[0],X_T.shape[1],1),Y_T.reshape(Y_T.shape[0],Y_T.shape[1],1),learnrates)
+        # print('S',sdat[0].shape,sdat[1].shape)
+        # stens=[self.retrieve[i] for i in ['X','Y_','learnrate']]
+        
+        # for e in range(ep):
+        #     for i in range(0,len(X_T),batchsize):
+        #         #v=[np.expand_dims(sdat[j][i],axis=0) for j in range(3)]
+        #         v=[sdat[j][i:i+batchsize] for j in range(3)]
+
+        #         v[2]=v[2][0]
+        #         _,acc=self.sess.run([train_step,error],feed_dict=dict(zip(stens,v)))
+        #         #all_acc[e*len(X_T)+i]=acc
+        #         all_acc.append(acc)
+        #         print(acc)
+
+        # X_tt=X_T[:100]
+        # Y_tt=Y_T[:100]
+        
+        X_tt=X_T
+        Y_tt=Y_T
+        batchsize=1
+
+        learnrates=[1e-3 for i in range(X_tt.shape[0])] 
+        #learnrates=[1e-3 for i in range(X_tt.shape[0]//2)] + [1e-4 for i in range(X_tt.shape[0]//3)] + [1e-5 for i in range(X_tt.shape[0]-(X_tt.shape[0]//2+X_tt.shape[0]//3))]
+        sdat=(X_tt.reshape(X_tt.shape[0],X_tt.shape[1],1),Y_tt.reshape(Y_tt.shape[0],Y_tt.shape[1],1),learnrates)
+    
         print('S',sdat[0].shape,sdat[1].shape)
         stens=[self.retrieve[i] for i in ['X','Y_','learnrate']]
-        all_acc=np.zeros(X_T.shape[0]*ep)
+
         for e in range(ep):
-            for i in range(0,len(X_T),batchsize):
-                #v=[np.expand_dims(sdat[j][i],axis=0) for j in range(3)]
+            for i in range(0,len(X_tt),batchsize):
                 v=[sdat[j][i:i+batchsize] for j in range(3)]
-                #v[1]=v[1].reshape(-1,1)
                 v[2]=v[2][0]
-                #_,acc,ytmp,w3s,h3=self.sess.run([train_step,error,self.retrieve['y'],tf.shape(self.retrieve['W3']),tf.shape(self.retrieve['H2'])],feed_dict=dict(zip(stens,v)))
-                #print('ytmp',ytmp.shape)
-                #print('w3s',w3s,'h3',h3)
                 _,acc=self.sess.run([train_step,error],feed_dict=dict(zip(stens,v)))
-                all_acc[e*len(X_T)+i]=acc
+                #all_acc[e*len(X_tt)+i]=acc
+                all_acc.append(acc)
                 print(acc)
 
-        X_tt=X_T[:100]
-        Y_tt=Y_T[:100]
-
-
-        learnrates=[1e-3 for i in range(X_T.shape[0]//2)] + [1e-4 for i in range(X_T.shape[0]//3)] + [1e-5 for i in range(X_T.shape[0]-(X_T.shape[0]//2+X_T.shape[0]//3))]
-
-        sdat=(X_T.reshape(X_T.shape[0],X_T.shape[1],1),Y_T.reshape(Y_T.shape[0],Y_T.shape[1],1),learnrates)
-        print('S',sdat[0].shape,sdat[1].shape)
-        stens=[self.retrieve[i] for i in ['X','Y_','learnrate']]
-        all_acc=np.zeros(X_T.shape[0]*ep)
-        for e in range(ep):
-            for i in range(0,len(X_T),batchsize):
-                #v=[np.expand_dims(sdat[j][i],axis=0) for j in range(3)]
-                v=[sdat[j][i:i+batchsize] for j in range(3)]
-                #v[1]=v[1].reshape(-1,1)
-                v[2]=v[2][0]
-                #_,acc,ytmp,w3s,h3=self.sess.run([train_step,error,self.retrieve['y'],tf.shape(self.retrieve['W3']),tf.shape(self.retrieve['H2'])],feed_dict=dict(zip(stens,v)))
-                #print('ytmp',ytmp.shape)
-                #print('w3s',w3s,'h3',h3)
-                _,acc=self.sess.run([train_step,error],feed_dict=dict(zip(stens,v)))
-                all_acc[e*len(X_T)+i]=acc
-                print(acc)
-
-        return all_acc
+        return np.array(all_acc)
 
     
     def predict(self,Xt):
@@ -278,3 +310,22 @@ class Elman():
 
     def reset(self):
         self.sess.run(tf.global_variables_initializer())
+
+class MLP:
+    def __init__(self,n_in,n_out,n_hidden):
+        X=tf.placeholder(tf.float32,shape=[None, None, n_in])
+        Y_=tf.placeholder(tf.float32,shape=[None, None, n_out])
+
+        shapes={'X':[None,n_in],
+                'Y_':[n_out],
+                'W1':[n_in,n_hidden],
+                'RW1':[n_hidden,n_hidden],
+                'B1':[n_hidden],
+                'W2':[n_hidden,n_hidden],
+                'RW2':[n_hidden,n_hidden],
+                'B2':[n_hidden],
+                'W3':[n_hidden,n_out],
+                'B3':[n_out],
+                'H1':[1,n_hidden],
+                'H2':[1,n_hidden]
+                }
