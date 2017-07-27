@@ -44,3 +44,5 @@ Need to make a system to adapt to stale errors
 * Need to fix learning rate things, or do more epochs of training. Currently models are not fitting well.
 
 * Adjust training spacing to be 0.1, instead of 0.01. These experiments are taking far too long. There is likely too much information for proper convergence
+* X(t), X(t-6), x(t-12), x(t-18)
+20 hidden neurons in two layer architecture

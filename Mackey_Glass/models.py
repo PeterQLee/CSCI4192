@@ -312,20 +312,74 @@ class Elman():
         self.sess.run(tf.global_variables_initializer())
 
 class MLP:
-    def __init__(self,n_in,n_out,n_hidden):
-        X=tf.placeholder(tf.float32,shape=[None, None, n_in])
-        Y_=tf.placeholder(tf.float32,shape=[None, None, n_out])
-
+    def __init__(self,n_in,n_out,n_hidden=20):
+        X=tf.placeholder(tf.float32,shape=[None, n_in])
+        Y_=tf.placeholder(tf.float32,shape=[None, n_out])
+        learnrate=tf.placeholder(tf.float32)
         shapes={'X':[None,n_in],
-                'Y_':[n_out],
+                'Y_':[None,n_out],
                 'W1':[n_in,n_hidden],
-                'RW1':[n_hidden,n_hidden],
                 'B1':[n_hidden],
                 'W2':[n_hidden,n_hidden],
-                'RW2':[n_hidden,n_hidden],
                 'B2':[n_hidden],
                 'W3':[n_hidden,n_out],
                 'B3':[n_out],
-                'H1':[1,n_hidden],
-                'H2':[1,n_hidden]
-                }
+        }
+
+        weights_n=['W1','W2','W3']
+        biases_n=['B1','B2','B3']
+        weights=dict(zip(weights_n,
+                         [tf.get_variable(i,shapes[i],initializer=tf.contrib.layers.xavier_initializer()) for i in weights_n]
+                         ))
+        
+        biases=dict(zip(biases_n,
+                        [tf.get_variable(i,initializer=np.zeros(shapes[i],dtype=np.float32)) for i in biases_n]
+                        ))
+        
+        H1=tf.nn.elu(tf.matmul(X,weights['W1'])+biases['B1'])
+        H2=tf.nn.elu(tf.matmul(H1,weights['W2'])+biases['B2'])
+        y=tf.matmul(H2,weights['W3'])+biases['B3']
+
+        error=tf.reduce_mean(tf.square(y-Y_))
+
+        E=error
+        train_step=tf.train.AdamOptimizer(learnrate).minimize(E)
+
+        self.retrieve={'train_step':train_step,'error':error,'X':X,'Y_':Y_,'learnrate':learnrate,'y':y,'H2':H2}
+        self.sess=tf.Session()
+        self.sess.run(tf.global_variables_initializer())
+
+    def train(self,X_T,Y_T,ep=1):
+        batchsize=1
+        self.sess.run(tf.global_variables_initializer())
+        train_step,error=[self.retrieve[i] for i in ['train_step','error']]
+        X=self.retrieve['X']
+        Y_=self.retrieve['Y_']
+        learnrate=self.retrieve['learnrate']
+        
+        all_acc=[]
+
+        X_tt=X_T
+        Y_tt=Y_T
+        #Prep learning rates
+        learnrates=[1e-3 for i in range(X_tt.shape[0])] 
+
+        for e in range(ep):
+
+            for i in range(0,len(X_tt),batchsize):
+                _,acc=self.sess.run([train_step,error],feed_dict=
+                                    {X:X_tt[i:i+batchsize],
+                                     Y_:Y_tt[i:i+batchsize],learnrate:1e-3})
+                
+                #all_acc[e*len(X_tt)+i]=acc
+                all_acc.append(acc)
+            print(np.mean(all_acc[:-10]))
+        return np.array(all_acc)
+
+
+    def predict(self,Xt):
+        output=self.retrieve['y']
+        X=self.retrieve['X']
+        out,=self.sess.run([output],feed_dict={X:Xt})
+
+        return out
