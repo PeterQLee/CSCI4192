@@ -51,4 +51,4 @@ Need to make a system to adapt to stale errors
 * why does eLM do well for 1 and 10, but not for 5?
 examine periodicity of curve, maybe 5 relies more on further back info?
 
-Nonlinear piecewise function
+Nonlinear piecewise functionq

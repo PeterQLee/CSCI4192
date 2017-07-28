@@ -64,7 +64,7 @@ def gradplot(predy,testy,mname,INCREMENT=1):
 
         plt.tight_layout()
         outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
-        plt.savefig('{}/{}_{}.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
+        plt.savefig('{}/{}_{}_mg2.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
         #break
         #plt.show()
 

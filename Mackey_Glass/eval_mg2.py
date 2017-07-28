@@ -1,26 +1,26 @@
 import numpy as np
-from eval_mg1 import gradplot
+from eval_mg1 import gradplot, elm_parameter, gru_parameter, lstm_parameter
 from mg1 import bisect_set
-
+import matplotlib.pyplot as plt
 
 def scatter_plot(base,i,n_test):
     from scipy.stats import iqr
     spacing=100
     ident='A'
-    modelnames=['ELM','LSTM','GRU','MLP']
-    M=np.zeros((4,4,3))
-    D=np.zeros((4,4,3))
-    X=np.zeros((4,4,1)) #nmodels, n_steps, data
-    mp={'ELM':0,'LSTM':1,'GRU':2,'MLP':3}
-    Mrange= [0.01,0.17]
-    Drange=[0.004,0.03]
+    modelnames=['ELM','LSTM','GRU']
+    M=np.zeros((len(modelnames),4,3))
+    D=np.zeros((len(modelnames),4,3))
+    X=np.zeros((len(modelnames),4,1)) #nmodels, n_steps, data
+    mp={'ELM':0,'LSTM':1,'GRU':2}#,'MLP':3}
+    Mrange= [0.07,3.2]
+    Drange=[0.03,0.425]
     hp={32:0,64:1,96:2,128:3}
 
     base='/mnt/D2/Chaos/mg/lng/beta/'
     train_data=[]
     test_data=[]
-    for i in range(0,10,1):
-        ident=chr(ord('K')+i)
+    for j in range(0,10,1):
+        ident=chr(ord('K')+j)
         data=np.load('{}/data{}.npy'.format(base,ident))
         train=data[:len(data)//2]
         test=data[len(data)//2:]
@@ -38,13 +38,15 @@ def scatter_plot(base,i,n_test):
             #predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes)).reshape(1,-1,1)
 
             #testy=data[50000+i*100::100].reshape(1,-1)
-            predy=np.reshape(-1,train_data[0].shape[1])
-            testy=np.reshape(-1,train_data[0].shape[1])
+            predy=np.array([]).reshape(-1,train_data[0].shape[1]-i)
+            testy=np.array([]).reshape(-1,train_data[0].shape[1]-i)
             for C in range(10):
                 ident=chr(ord('K')+C)
-                dy=np.load('{}/data{}.npy'.format(base,ident))
-                py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C))).reshape(1,-1,1)
+                #dy=np.load('{}/data{}.npy'.format(base,ident)).reshape(1,-1,1)
+                dy=test_data[C].reshape(1,-1)[:,i:]
+                py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C))).reshape(1,-1)
                 predy=np.concatenate((predy,py))
+                print(dy.shape)
                 testy=np.concatenate((testy,dy))
                 
             print('v',predy.shape,testy.shape,base,mname,i,hidden_nodes)
@@ -69,7 +71,7 @@ def scatter_plot(base,i,n_test):
             D[mp[mname],hp[hidden_nodes],2]=iqr(v,rng=(50,75))
     d=0
     color=['blue','green','red','orange']
-    uf=(elm_parameter,lstm_parameter,gru_parameter,mlp_parameter)
+    uf=(elm_parameter,lstm_parameter,gru_parameter)
     plt.suptitle('Forward prediction by {}'.format(i))
     plt.subplot(211)
     for d in range(len(modelnames)):
@@ -93,7 +95,9 @@ def scatter_plot(base,i,n_test):
     plt.xlabel('Number of parameters')
     plt.tight_layout()
     outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
-    plt.savefig('{}/mg1_scatter_{}.png'.format(outdir,i))
+    plt.savefig('{}/mg2_scatter_{}.png'.format(outdir,i))
+    
+    #plt.show()
 
     
 if __name__=='__main__':
@@ -104,8 +108,8 @@ if __name__=='__main__':
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=1
-    mname='MLP'
+    i=30
+    mname='LSTM'
     predy=np.load('{}/{}_{}_H{}c.npy'.format(base,mname,i,hidden_nodes))
 
     
@@ -125,4 +129,4 @@ if __name__=='__main__':
     #box_plot(P,testy,mname,i)
     print(predy.shape)
     
-    scatter_plot(base,i,predy.shape[0])
+    #scatter_plot(base,i,predy.shape[0])
