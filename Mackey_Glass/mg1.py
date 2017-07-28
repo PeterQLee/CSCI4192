@@ -98,8 +98,9 @@ def one_revised(spacing=100):
 
     for v in range(9):
         for n_hidden in [128,96,64,32]:#[32,64,96,128]:        
-            for i in [1,5,10]:
-                n_h=str(n_hidden)+chr(ord('a')+v)
+            for i in [1,5,10,30]:
+                #n_h=str(n_hidden)+chr(ord('a')+v)
+                n_h=str(n_hidden)
                 if not os.path.exists('{}/GRU_{}_H{}.npy'.format(base,i,n_h)):
                     print('GRU',i,n_h)
                     reset_graph()

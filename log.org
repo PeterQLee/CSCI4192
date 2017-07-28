@@ -46,3 +46,9 @@ Need to make a system to adapt to stale errors
 * Adjust training spacing to be 0.1, instead of 0.01. These experiments are taking far too long. There is likely too much information for proper convergence
 * X(t), X(t-6), x(t-12), x(t-18)
 20 hidden neurons in two layer architecture
+
+
+* why does eLM do well for 1 and 10, but not for 5?
+examine periodicity of curve, maybe 5 relies more on further back info?
+
+Nonlinear piecewise function

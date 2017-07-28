@@ -93,41 +93,41 @@ def full_set(tl=2000,incrange=20,params=None):
 if __name__=='__main__':
     import os
     #Variable beta
-    # outdir='/mnt/D2/Chaos/mg/lng/beta/L50/'
-    # os.makedirs(outdir,exist_ok=True)
-    # i='A'
-    
-    # #Beta
-    # for i_ in range(10):
-    #     i=chr(ord('K')+i_)
-    #     beta=np.random.uniform(low=1,high=10,size=1)
-    #     rho=1
-    #     tau=10
-    #     n=9.65
-    #     params=[beta,rho,tau,n]
-    #     X=full_set(tl=30000,incrange=50,params=params)
-    #     plt.plot(np.arange(3000),X[3000:6000])
-    #     plt.savefig('{}/{}.png'.format(outdir,i))
-    #     np.save('{}/data{}.npy'.format(outdir,i),X)
-    #     np.save('{}/bval{}.npy'.format(outdir,i),params)
-    #     plt.clf()
-    
-    #Stable
-    outdir='/mnt/D2/Chaos/mg/lng/stable2/L50/'
+    outdir='/mnt/D2/Chaos/mg/lng/beta/'
     os.makedirs(outdir,exist_ok=True)
     i='A'
     
-    beta=0.2
-    rho=0.1
-    tau=17
-    n=10
-    params=[beta,rho,tau,n]
-    X=full_set(tl=1000,incrange=50,params=params)
-    plt.plot(np.arange(3000),X[3000:6000])
-    plt.savefig('{}/{}.png'.format(outdir,i))
-    np.save('{}/data{}.npy'.format(outdir,i),X)
-    np.save('{}/bval{}.npy'.format(outdir,i),params)
-    plt.clf()
+    #Beta
+    for i_ in range(10):
+        i=chr(ord('K')+i_)
+        beta=np.random.uniform(low=0.1,high=4,size=1)
+        rho=0.1
+        tau=17
+        n=10
+        params=[beta,rho,tau,n]
+        X=full_set(tl=1000,incrange=50,params=params)
+        plt.plot(np.arange(3000),X[3000:6000])
+        plt.savefig('{}/{}.png'.format(outdir,i))
+        np.save('{}/data{}.npy'.format(outdir,i),X)
+        np.save('{}/bval{}.npy'.format(outdir,i),params)
+        plt.clf()
+    
+    #Stable
+    # outdir='/mnt/D2/Chaos/mg/lng/stable2/L50/'
+    # os.makedirs(outdir,exist_ok=True)
+    # i='A'
+    
+    # beta=0.2
+    # rho=0.1
+    # tau=17
+    # n=10
+    # params=[beta,rho,tau,n]
+    # X=full_set(tl=1000,incrange=50,params=params)
+    # plt.plot(np.arange(3000),X[3000:6000])
+    # plt.savefig('{}/{}.png'.format(outdir,i))
+    # np.save('{}/data{}.npy'.format(outdir,i),X)
+    # np.save('{}/bval{}.npy'.format(outdir,i),params)
+    # plt.clf()
     #runge_kutta(0.1,600,60000)
     #Weird dumb paper
     # beta=0.2

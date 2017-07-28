@@ -7,13 +7,15 @@ def mlp_parameter(x):
     return x*(4+1+x+1+1)+1
 
 def gru_parameter(x):
-    pass
+    return x*(3+3*x+3)+x*(3*x+3*x+3)+x+1
 
-def lstm_parameter(x)
-    
+def lstm_parameter(x):
+    #return 2*x*(4+4*(x)+4)+x+1
+    return x*(4+4*x+4)+x*(4*x+4*x+4)+x+1
 
-def elm_parameteR(x):
-    pass
+def elm_parameter(x):
+    return x*(1+x+1+x+x+1+1)+1
+
 def gradplot(predy,testy,mname,INCREMENT=1):
 
     for i in range(len(predy)):
@@ -34,12 +36,12 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         p_t_5,=plt.plot(steps[c:],P[c:],'-',label='p(t+{})'.format(INCREMENT),color='red')
         plt.legend(handles=[x_t_5,p_t_5])
         plt.subplot(222)
-        plt.ylabel('$|x-p|$'.format(INCREMENT,INCREMENT))
+        plt.ylabel('$\\int |x-p|$')
         plt.xlabel('t')
 
         u=np.cumsum(np.abs(T[c:]-P[c:]))/div
         plt.plot(steps[c:],u,'--',color='blue',label='x(t+{})'.format(INCREMENT))
-        plt.title('$\int |x-p| = {:.4f}$'.format(
+        plt.title('$\\int |x-p| = {:.4f}$'.format(
             np.sum(np.abs(P[c:]-T[c:]))/div))
         #plt.legend(handles=[x_t_5])
 
@@ -51,7 +53,7 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         plt.legend(handles=[x_t_5,p_t_5])
 
         sb=plt.subplot(224)
-        plt.ylabel('$| \\frac{dx}{dt}-\\frac{dp}{dt}|$')
+        plt.ylabel('$\\int| \\frac{dx)}{dt}-\\frac{dp}{dt}|$')
         t=steps[c:]
         v=np.cumsum(np.abs(dy_dt[c:]-dp_dt[c:]))/div
         
@@ -60,10 +62,11 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         plt.title('$\\int |\\frac{{dx}}{{dt}}-\\frac{{dp}}{{dt}}| = {:.4f}$'.format(
             np.sum(np.abs(dy_dt[c:]-dp_dt[c:]))/div))
 
-        #plt.tight_layout()
-        #plt.savefig('{}/lng/figures/{}_{}.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
+        plt.tight_layout()
+        outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+        plt.savefig('{}/{}_{}.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
         #break
-        plt.show()
+        #plt.show()
 
 def box_plot(predys,testy,mname,INCREMENT):
     M=np.zeros((3,predys[0].shape[0]))
@@ -88,22 +91,24 @@ def box_plot(predys,testy,mname,INCREMENT):
 def scatter_plot(base,i,n_test):
     from scipy.stats import iqr
     ident='A'
-
-    M=np.zeros((3,4,3))
-    D=np.zeros((3,4,3))
-    X=np.zeros((3,4,1))
-    mp={'ELM':0,'LSTM':1,'GRU':2}
-    
+    modelnames=['ELM','LSTM','GRU','MLP']
+    M=np.zeros((4,4,3))
+    D=np.zeros((4,4,3))
+    X=np.zeros((4,4,1)) #nmodels, n_steps, data
+    mp={'ELM':0,'LSTM':1,'GRU':2,'MLP':3}
+    Mrange= [0.01,0.17]
+    Drange=[0.004,0.03]
     hp={32:0,64:1,96:2,128:3}
     for hidden_nodes in [32,64,96,128]:
-        for mname in ['ELM','LSTM','GRU']:
+        for mname in modelnames:
             
             data=np.load('{}/data{}.npy'.format(base,ident))
-            predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes))
+            predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes)).reshape(1,-1,1)
 
             testy=data[50000+i*100::100].reshape(1,-1)
+            
             for C in range(9):
-                py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C)))
+                py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C))).reshape(1,-1,1)
                 predy=np.concatenate((predy,py))
             print('v',predy.shape,testy.shape,base,mname,i,hidden_nodes)
             u=np.zeros(predy.shape[0])
@@ -126,36 +131,49 @@ def scatter_plot(base,i,n_test):
             D[mp[mname],hp[hidden_nodes],1]=iqr(v,rng=(25,50))
             D[mp[mname],hp[hidden_nodes],2]=iqr(v,rng=(50,75))
     d=0
-    color=['blue','green','red']
-    for d in range(3):
+    color=['blue','green','red','orange']
+    uf=(elm_parameter,lstm_parameter,gru_parameter,mlp_parameter)
+    plt.suptitle('Forward prediction by {}'.format(i))
+    plt.subplot(211)
+    for d in range(len(modelnames)):
         print(M[d,:,0],M[d,:,1])
-        plt.errorbar(X[d,:,0],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
-    plt.ylabel('|x(t+{}) - p(t+{})|'.format(i))
+        plt.errorbar([uf[d](j) for j in X[d,:,0]],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    axes=plt.gca()
+    axes.set_ylim(Mrange)
+    plt.ylabel('$\\int |x - p|$')
     plt.xlabel('Number of parameters')
     plt.legend()
-    plt.show()
+    plt.subplot(212)
 
-    for d in range(3):
+    for d in range(len(modelnames)):
+        #plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
+        plt.errorbar([uf[d](j) for j in X[d,:,0]],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    axes=plt.gca()
+    axes.set_ylim(Drange)
 
-        plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
     plt.legend()
-    plt.show()
+    plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
+    plt.xlabel('Number of parameters')
+    plt.tight_layout()
+    outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+    plt.savefig('{}/mg1_scatter_{}.png'.format(outdir,i))
+    #plt.show()
 
 if __name__=='__main__':
     incrange=50
-    hidden_nodes=32
+    hidden_nodes=64
     base='/mnt/D2/Chaos/mg/lng/stable2/'
     ident='A'
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=5
-    mname='GRU'
-    predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes))
+    i=30
+    mname='LSTM'
+    predy=np.load('{}/{}_{}_H{}a.npy'.format(base,mname,i,hidden_nodes))
     
     #predy=np.transpose(predy,[1,2,0])
     #data=data[:
-
+    
     train,test=bisect_set(data,i,incrange,spacing)
     testy=test[:,100*i:]
     
@@ -163,7 +181,9 @@ if __name__=='__main__':
     testy=data[50000+100*i::100].reshape(1,-1)
     
     ############
-    gradplot(predy,testy,mname,i)
+    print(testy.shape,predy.shape)
+    predy=predy.reshape(1,-1,1)
+    #gradplot(predy,testy,mname,i)
 
     #P=(np.load('{}/ELM_{}_H{}.npy'.format(base,i,hidden_nodes)),np.load('{}/LSTM_{}_H{}.npy'.format(base,i,hidden_nodes)),np.load('{}/GRU_{}_H{}.npy'.format(base,i,hidden_nodes)))
 
