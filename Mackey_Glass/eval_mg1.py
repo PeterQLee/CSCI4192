@@ -138,8 +138,8 @@ def scatter_plot(base,i,n_test):
     for d in range(len(modelnames)):
         print(M[d,:,0],M[d,:,1])
         plt.errorbar([uf[d](j) for j in X[d,:,0]],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    axes=plt.gca()
-    axes.set_ylim(Mrange)
+    #axes=plt.gca()
+    #axes.set_ylim(Mrange)
     plt.ylabel('$\\int |x - p|$')
     plt.xlabel('Number of parameters')
     plt.legend()
@@ -148,8 +148,8 @@ def scatter_plot(base,i,n_test):
     for d in range(len(modelnames)):
         #plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
         plt.errorbar([uf[d](j) for j in X[d,:,0]],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    axes=plt.gca()
-    axes.set_ylim(Drange)
+    #axes=plt.gca()
+    #axes.set_ylim(Drange)
 
     plt.legend()
     plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
@@ -167,7 +167,7 @@ if __name__=='__main__':
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=30
+    i=1
     mname='LSTM'
     predy=np.load('{}/{}_{}_H{}a.npy'.format(base,mname,i,hidden_nodes))
     

@@ -12,8 +12,8 @@ def scatter_plot(base,i,n_test):
     D=np.zeros((len(modelnames),4,3))
     X=np.zeros((len(modelnames),4,1)) #nmodels, n_steps, data
     mp={'ELM':0,'LSTM':1,'GRU':2}#,'MLP':3}
-    Mrange= [0.07,3.2]
-    Drange=[0.03,0.425]
+    #Mrange= [0.07,3.2]
+    #Drange=[0.03,0.425]
     hp={32:0,64:1,96:2,128:3}
 
     base='/mnt/D2/Chaos/mg/lng/beta/'
@@ -77,8 +77,8 @@ def scatter_plot(base,i,n_test):
     for d in range(len(modelnames)):
         print(M[d,:,0],M[d,:,1])
         plt.errorbar([uf[d](j) for j in X[d,:,0]],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    axes=plt.gca()
-    axes.set_ylim(Mrange)
+    #axes=plt.gca()
+    #axes.set_ylim(Mrange)
     plt.ylabel('$\\int |x - p|$')
     plt.xlabel('Number of parameters')
     plt.legend()
@@ -87,8 +87,8 @@ def scatter_plot(base,i,n_test):
     for d in range(len(modelnames)):
         #plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
         plt.errorbar([uf[d](j) for j in X[d,:,0]],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    axes=plt.gca()
-    axes.set_ylim(Drange)
+    #axes=plt.gca()
+    #axes.set_ylim(Drange)
 
     plt.legend()
     plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
@@ -108,7 +108,7 @@ if __name__=='__main__':
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=30
+    i=1
     mname='LSTM'
     predy=np.load('{}/{}_{}_H{}c.npy'.format(base,mname,i,hidden_nodes))
 
@@ -122,11 +122,11 @@ if __name__=='__main__':
     ############
     print(testy.shape,predy.shape)
     predy=predy.reshape(1,-1,1)
-    gradplot(predy,testy,mname,i)
+    #gradplot(predy,testy,mname,i)
 
     #P=(np.load('{}/ELM_{}_H{}.npy'.format(base,i,hidden_nodes)),np.load('{}/LSTM_{}_H{}.npy'.format(base,i,hidden_nodes)),np.load('{}/GRU_{}_H{}.npy'.format(base,i,hidden_nodes)))
 
     #box_plot(P,testy,mname,i)
     print(predy.shape)
     
-    #scatter_plot(base,i,predy.shape[0])
+    scatter_plot(base,i,predy.shape[0])
