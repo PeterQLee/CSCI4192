@@ -52,3 +52,11 @@ Need to make a system to adapt to stale errors
 examine periodicity of curve, maybe 5 relies more on further back info?
 
 Nonlinear piecewise functionq
+
+* Paper sources
+** Need LSTM and GRU paper, and things saying they are good.
+** adam optmizer
+
+* fix epsilon
+* mention how models are trained
+* period after et al?
