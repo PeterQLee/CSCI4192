@@ -24,7 +24,7 @@ def mlp_split(data,ahead):
 
 def two(spacing=100):
 
-    base='/mnt/D2/Chaos/mg/lng/beta/'
+    base='/mnt/D2/Chaos/mg/lng/rho/'
     train_data=[]
     test_data=[]
     for i in range(0,10,1):

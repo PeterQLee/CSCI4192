@@ -93,15 +93,15 @@ def full_set(tl=2000,incrange=20,params=None):
 if __name__=='__main__':
     import os
     #Variable beta
-    outdir='/mnt/D2/Chaos/mg/lng/beta/'
+    outdir='/mnt/D2/Chaos/mg/lng/rho/'
     os.makedirs(outdir,exist_ok=True)
     i='A'
     
     #Beta
     for i_ in range(10):
         i=chr(ord('K')+i_)
-        beta=np.random.uniform(low=0.1,high=4,size=1)
-        rho=0.1
+        beta=0.2#np.random.uniform(low=0.1,high=4,size=1)
+        rho=np.random.uniform(low=0.1,high=4,size=1)
         tau=17
         n=10
         params=[beta,rho,tau,n]

@@ -37,7 +37,7 @@ Elman (ELM) recurrent neural network.
 
 Two experiments were conducted for predicting future MG values 1, 5,
 10, and 30 steps ahead. The first is when the models fit to a single
-MG series as did \cite{tr,}. The second is fitting models MG series with
+MG series as did \cite{tr,Farsa}. The second is fitting models MG series with
 free parameters to evaluate if the models could adapt to the shape of
 the curve during evaluation. 
 
@@ -73,8 +73,8 @@ amount of information that is held in hidden nodes between time
 steps. With these gates, the model can selectively ``forget''
 and ``focus'' on information. It is thought that their ability to select what information
 passes to subsequent time steps is what enables them to perform so
-well in various tasks \cite{}. The LSTM was one that was introduced in the early
-2000's, while the GRU was introduced in 2012. It has been theorized
+well in various tasks \cite{LSTM}. The LSTM was one that was introduced in the early
+1997, while the GRU was introduced in 2012 \cite{GRU}. It has been theorized
 that the GRU is able to perform equally as well as the LSTM in many tasks. 
 The hidden nodes for
 LSTMs and GRUs are calculated by \ref{eq:LSTM_h} and \ref{eq:GRU_h}
@@ -156,7 +156,7 @@ initialization I attempted forecasting with $t_0$ = 1, 5, 10, and 30,
 to determine the degredation of performance with further forecasting.
 
 %\subsection {Experiment 1: Constant MG Parameters}
-The first experiment followed those of related works \cite{}, in that the
+The first experiment followed those of related works \cite{tr, Farsa}, in that the
 parameters of the MG series were kept constant to $\beta = 0.2$,
 $\gamma = 0.1$, $\tau = 17$, and $n = 10$. The second experiment used 10 MG series with different
 initializations of $0.1 < \beta < 4$ with a leave-one-out style
@@ -171,8 +171,8 @@ To measure model performance, two metrics were selected. They are
 the cumulative absolute difference (\ref{eq:cumabs}) and the
 cumulative absolute difference of slopes
 (\ref{eq:cumabsderiv}). The cumulative absolute difference, which is
-equivalent to square root mean squared error, is used in the other
-papers \cite{other}, and generally shows how far off each prediction
+equivalent to square root mean squared error, is used 
+papers \cite{Farsa}, and generally shows how far off each prediction
 is from the truth. The cumulative absolute difference of slopes is
 unique to this paper, and its purpose is to show whether a model can
 adapt to sharp peaks in the functions, or whether the model just
@@ -322,22 +322,26 @@ no model seems to have an edge at producing predictions further in the future.
 \section {Discussion}
 It should be quite clear that the gated recurrent networks do not have
 an advantage over the non-gated Elman network for this predictive
-forecasting task. This could be because the ability to forget
-information between time steps is less useful for this task, which
-only requires extrapolating new points based on slope. In contrast,
-tasks that requires discrete outcomes, such as NLP tasks, and those
-that require integrating over the time series to provide a single
-outcome may benefit more from the gated architecture. 
+forecasting task. This could be because the ability to recall specific 
+information between time steps is less useful for this task, since the
+MLP showed a non-linear approximation can work despite $\tau$ being
+different from the control points. As the LSTM was designed for tasks requiring distant recollection
+\cite{LSTM}, this could explain why the LSTM has such better
+performance in tasks like natural language processing, but fails to make a difference in this
+instance of predictive forecasting
 
 In terms of the limitations of this paper, it did not explore gated
 networks with external memory (like the NARX network). Also, due to
 time constraints, I was unable to perform experiments with other MG
-parameters were randomized. This is unfornunate, as varying $\gamma$
+parameters were randomized. This is unfortunate, as varying $\gamma$
 may have yielded a more diverse effect than varying $\beta$, which
-could have yielded different effects in the models. (Elman no gradient
-peeking) (no regularization)
+could have shown yielded different performance in models. Also, due to
+the style of implementation, the Elman networks did not use peephole
+connections or gradient clipping like the LSTM and GRU. Finally, there
+was no regularization attempts for any model.
 
-(Future work)
+For future work, I would like perform a similar analysis with dynamic
+MRI time series images.
 
  \section{Conclusion}
 I used the MG series to evaluate the performance of gated-recurrent
@@ -354,8 +358,11 @@ the MLP can simply create a non-linear approximation. Varying $\beta$
 (and $\gamma$) showed that the MLP was unable generalize with free
 parameters. Also, there much larger reduction in accuracy for
 predicting distant values, but nonetheless, there was little
-difference between gated and non-gated RNNs in the large number
+difference between gated and non-gated RNNs within the number
 of configurations attempted.
 % \appendices{}
+
+\bibliographystyle{abbrv}
+\bibliography{ref}
 
 \end{document}
