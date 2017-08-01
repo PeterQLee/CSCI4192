@@ -1,7 +1,9 @@
 \documentclass[11pt]{article}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{graphicx}
 \usepackage[margin=0.5in]{geometry}
+\newcommand{\Z}{\mathbb{Z}}
 \author{Peter Lee}
 \date{\today}
 \title{Examination of gated networks within the Mackey-Glass time series}
@@ -10,20 +12,20 @@
 \maketitle
 
 \section{Introduction}
-A common application of recurrent neural network models is the
+A common application of recurrent neural network (RNN) models is the
 analysis patterns within time series. A specific
 type of analysis is predictive forecasting, where one uses past
 observations to predict those in the future. 
 
-The Mackey-Glass (MG) \cite{MG} is known as a chaotic time series.
-The MG sequence's chaotic behaviour when its parameters and initial
-conditions enable it to undergo bifurcation makes it an interesting
+The Mackey-Glass (MG) series\cite{MG} is known as a chaotic time series.
+The MG series's chaotic behaviour, when its parameters and initial
+conditions enable it to undergo bifurcation, makes it an interesting
 for predictive forecasting, since it cannot be evaluated exactly
 in generality. In the literature there has been many attempts for forecasting the MG
 series. Lanedes et al. used a multi-layer perceptron with past control
 points to calculate a non-linear approximation for forecasting future
 points \cite{tr}. Farsa et al. used the same configuration as
-\cite{tr} and with the validation of their NARX-Elman network showed
+\cite{tr} and through the comparison of their NARX-Elman network they showed
 that there are many works that use the MG series as a way to validate
 their models \cite{Farsa}.
 
@@ -32,52 +34,49 @@ compare to other recurrent and non-recurrent solutions for predictive
 forecasting. More specifically, I will be investigating two types of
 gated recurrent networks, Long Short term memory (LSTM) \cite{LSTM}
 and Gated Recurrent Units (GRU) \cite{GRU} and comparing them to the
-multi-layer perceptron (MLP) model, as developed by \ref{tr} and an
+multi-layer perceptron (MLP) model, in similar style to the one used by \cite{tr}, and an
 Elman (ELM) recurrent neural network.
 
-Two experiments were conducted for predicting future MG values 1, 5,
-10, and 30 steps ahead. The first is when the models fit to a single
-MG series as did \cite{tr,Farsa}. The second is fitting models MG series with
-free parameters to evaluate if the models could adapt to the shape of
+Two experiments were conducted for forecasting future MG values 1, 5,
+10, and 30 steps ahead. The first is when the models fit to the same MG series with static parameters as \cite{tr,Farsa}. The second experiment fit models to MG series with
+a free parameter to evaluate if the models could adapt to the shape of
 the curve during evaluation. 
 
 The first experiment showed little difference between the gated and
 non-gated recurrent networks, regardless of parametric complexity. The
 MLP performed similarly, as long the number of hidden nodes
 remained low. Training for distant predictions did not cause much
-increase in error (0.03 to 0.10) and also did not diverge the
+increase in error and also did not diverge the
 models from each other in terms of performance. The second experiment showed that the MLP was unable to generalize to
-having a randomized $\beta$. However, the performance between all the
+having a randomized parameter. However, the performance between all the
 recurrent networks remained similar. Although predicting distant
 values increased error rates much more than the first experiment,
 there was still little notable difference between the recurrent
 models.
 
-These predictive forecasting experiments showed that there seems to
+These predictive forecasting experiments showed that there was
 little tangible benefit from using a gated network instead of an
-ordinary Elman network. This suggests that
+ordinary Elman network. This suggested that
 the gated network's structure to forget information may be
-better suited for tasks that require active recall, like NLP tasks, or
-calculating a single integrated value (Ktrans) , instead of ones like
-predictive forecasting that can be acquired by analyzing slope. %I
+better suited for tasks that require active recall, like NLP tasks, instead of ones like
+predictive forecasting that can be acquired by analyzing continous steps.
 
 \section{Models}
-The MLP is a model that uses hidden non-linear
-layers, as shown in equation (\ref{eq:MLP_h})
-to approximate a function. RNNs are MLPs that use previous evaluations
-of hidden nodes as input, forming recurrent connections. The most
-simple RNN is the Elman network, with hidden nodes calculated in
+The MLP is a model that uses hidden layers of non-linear functions
+, as shown in equation (\ref{eq:MLP_h})
+to approximate a target function. RNNs are MLPs that use previous evaluations
+of hidden nodes as input, forming recurrent connections. A simple example of an RNN is the Elman network, with hidden nodes calculated in
 equation (\ref{eq:RNN_h}).
 Gated recurrent networks are networks that control the
 amount of information that is held in hidden nodes between time
 steps. With these gates, the model can selectively ``forget''
 and ``focus'' on information. It is thought that their ability to select what information
 passes to subsequent time steps is what enables them to perform so
-well in various tasks \cite{LSTM}. The LSTM was one that was introduced in the early
-1997, while the GRU was introduced in 2012 \cite{GRU}. It has been theorized
-that the GRU is able to perform equally as well as the LSTM in many tasks. 
+well in various tasks \cite{LSTM}. The LSTM was introduced in the early
+1997, while the GRU was introduced in 2014 \cite{GRU}. It has been theorized
+that the GRU is able to perform equally as well as the LSTM in many tasks \cite{Chung}, with the benefit of having reduced parametric complexity. 
 The hidden nodes for
-LSTMs and GRUs are calculated by \ref{eq:LSTM_h} and \ref{eq:GRU_h}
+LSTMs and GRUs are calculated by equations (\ref{eq:LSTM_h}) and (\ref{eq:GRU_h})
 respectively.
 
 \begin{equation}
@@ -94,10 +93,10 @@ respectively.
 \begin{split}
 f^{t} = \sigma(W_{xf}x + W_{hf}h^{t-1}+B_f) \\
 i^{t} = \sigma(W_{xi}x + W_{hi}h^{t-1}+B_i) \\
-c`^{t } = \tanh(W_{xc}x+W_{hc}h^{t-1}+B_c) \\
-c = c \circ f + i \circ c` \\
-o= \tanh (W_{xo}x + W_{ho}h^{t-1} + B_o) \\
-h^{t} = o \circ c  \\
+`c^{t} = \tanh(W_{xc}x+W_{hc}h^{t-1}+B_c) \\
+c^{t} = c^{t-1} \circ f^{t} + i^{t} \circ `c^{t} \\
+o^{t}= \tanh (W_{xo}x + W_{ho}h^{t-1} + B_o) \\
+h^{t} = o^{t} \circ c^{t}  \\
 \end{split}
    \label{eq:LSTM_h}
 \end{equation}
@@ -111,8 +110,7 @@ h^{t} = o \circ c  \\
   \label{eq:GRU_h}
 \end{equation}
 All these models were implemented in Tensorflow. Batch sizes of 1 were
-used and AdamOptimizer \cite{adam} was used to train with learning rate
-was set at $10^{-3}$. For predictive forecasting, the recurrent networks
+used and AdamOptimizer \cite{adam} was used to train with a learning rate set at $10^{-3}$. For predictive forecasting, the recurrent networks
 were trained by predicting an entire future sequence with back propagation through
 time. The MLP was trained by predicting future values using four
 control points, $x(t), x(t-6), x(t-12), x(t-18)$, similar to \cite{tr}.
@@ -127,18 +125,18 @@ MG series is modelled by the differential equation (\ref{eq:MG}).
 \label{eq:MG}
   \end{split}
 \end{equation}
-To generate the MG series, I used the Runge-Kutta (RK4) method to
+To generate the MG series, I used a 4 point Runge-Kutta (RK4) method to
 integrate the differential equation, with a step size of
-0.01. This implementation was realized in Python, using a queue
+0.01 and range of $0 \leq t \leq 1000$. This implementation was realized in Python, using a queue
 data-structure to recall the recurrent values. For training, only
-$0<t<=500$ were used and similarly for testing 
-$500<t<=1000$  were used, with $t \epsilon I$. The data vectors used
-for input and labels were $X \epsilon x(t) $ and $ Y \epsilon x(t+t_0) \forall
-t$. 
+$0 \leq t \leq 500$ were used and similarly for testing 
+$500 < t \leq 1000$  were used, with $t \in \Z$. The data vectors used
+for input and labels were $X = x(t) $ and $ Y = x(t+t_0) \forall
+t$, given some delay $t_0$. 
 
 The forecasting task involves predicting $x(t+t_0)$, given previous
-information $x(t), x(t-1) ... x(t)$. In general models for predictive forecasting
-can be described by equation \ref{eq:pred_forecast}, with the goal of
+information $x(t), x(t-1) ... x(1)$. In general models for predictive forecasting
+can be described by equation (\ref{eq:pred_forecast}), with the goal of
 choosing parameters, $\theta$ to minimize the error between $x(t+t_0)$
 and $f$. In this case, I used mean squared error as the error function.
 \begin{equation}
@@ -150,7 +148,7 @@ and $f$. In this case, I used mean squared error as the error function.
 For each of the following
 experiments, I
 trained models with two layers of hidden nodes with sizes of 32, 64, 96, and 128 to
-view the models with range of different hyper parameters and observe if
+view the models with range of different hyper parameters and observed if
 there was a trend in performance with increased complexity. For each
 initialization I attempted forecasting with $t_0$ = 1, 5, 10, and 30,
 to determine the degredation of performance with further forecasting.
@@ -158,13 +156,13 @@ to determine the degredation of performance with further forecasting.
 %\subsection {Experiment 1: Constant MG Parameters}
 The first experiment followed those of related works \cite{tr, Farsa}, in that the
 parameters of the MG series were kept constant to $\beta = 0.2$,
-$\gamma = 0.1$, $\tau = 17$, and $n = 10$. The second experiment used 10 MG series with different
+$\gamma = 0.1$, $\tau = 17$, and $n = 10$ and $x(t)=1.2 \forall t \leq 0$. These models were tested 10 times for each configuration, using Xavier initialized variables \cite{Xavier}. The second experiment used 10 MG series with different
 initializations of $0.1 < \beta < 4$ with a leave-one-out style
 evaluation. For example, 9 different series were used as a training
 set, while the last one was used as a training set. The motivation of
 this experiment, which contrasts those of other authors, was to measure
 how the well the recurrent models could adapt to the shape of the curve during
-evaluation and essentially estimate the(se) randomized parameter(s).
+on and essentially estimate the randomized parameter.
 
 \subsection{Evaluation}
 To measure model performance, two metrics were selected. They are
@@ -172,7 +170,7 @@ the cumulative absolute difference (\ref{eq:cumabs}) and the
 cumulative absolute difference of slopes
 (\ref{eq:cumabsderiv}). The cumulative absolute difference, which is
 equivalent to square root mean squared error, is used 
-papers \cite{Farsa}, and generally shows how far off each prediction
+in \cite{Farsa}, and generally shows how far off each prediction
 is from the truth. The cumulative absolute difference of slopes is
 unique to this paper, and its purpose is to show whether a model can
 adapt to sharp peaks in the functions, or whether the model just
@@ -180,19 +178,19 @@ generalizes to a smooth approximation of the curve.
 
 %Xavier initialization
 \begin{equation}
-\label{eq:cumabs}
   \int_{t_{start}}^{t_{end}} | x(t) - p(t) |
+\label{eq:cumabs}
 \end{equation}
 \begin{equation}
-\label{eq:cumabs}
   \int_{t_{start}}^{t_{end}} | \frac{dx(t)}{dt} - \frac{dp(t)}{dt} |
+\label{eq:cumabsderiv}
 \end{equation}
 
 \section {Results}
 \subsection {Experiment 1: Constant Parameters}
  Sample evaluations are presented
   in figure \ref{fig:func_evals}.  Note how the cumulative
-   differences begin large and increase constantly throughout the evaluation.
+   differences begins large and increase constantly throughout the evaluation. This indicates how the models start misplaced but then adapt to the correct shape throughout the curve.
 
  \begin{figure}
    \begin{center}
@@ -204,25 +202,20 @@ generalizes to a smooth approximation of the curve.
  \caption{Sample Curve fittings for MLP, ELM, GRU, and LSTM with
    delays of 1, 5, 10, and 30 respectively. The predicted and true
    values of the functions and slopes are plotted, along with the
-   cumulative absolute differences.}
+   cumulative absolute differences metrics.}
  \label{fig:func_evals}
    \end{figure}
 
-  Figure \ref{fig:mg1_scatter} shows the performance of versions of models with
-  respect to the number of parameters they possess**. It can be observed
+  Figure \ref{fig:mg1_scatter} shows the performance of models with
+  respect to the number of parameters they possess. It can be observed
   that all recurrent models seem to perform very similarly for $t_0 =
   1$. The MLP seems to fit well with less parameters, with overfitting
-  likely occuring with an increased number of parameters, as shown 
-  by the higher median and larger variance in (No
-  regularization was attempted to keep models on par with each
-  other). It seems that LSTM and GRU were scarcely effected by an
-  increase in parameters. The ELM seems to perform slightly better
-  then the other recurrent models, with the exception of $t_0 = 30$, where it seems to
-  become more unstable. Overall all the models achieve similar
+  likely occuring when the number of parameters increases, as shown 
+  by the higher median and larger variance. None of the recurrent models seem to improve or degrade with additional parametric complexity . Overall all the models achieve similar
   performance in fitting to the static MG series. Since the recurrent
   models did not out perform the MLP, this raises the question as to
   whether fitting to a static MG series is the best benchmarking task
-  for the MLP. %TOO long
+  for the MLP.
 
   \begin{figure}
     \begin{center}
@@ -244,7 +237,7 @@ Alternatively figure \ref{fig:mg1_save} shows the performance of the models only
 marginally reduced with longer term predictions. No model seems to
 have an edge at producing predictions further in the future,
 indicating that in static curve prediction, an MLP with control points
-seem sufficient. This shows that 
+seem sufficient.
 
   \begin{figure}
     \begin{center}
@@ -262,7 +255,7 @@ seem sufficient. This shows that
 Figure \ref{fig:mg2_func} shows sample evaluations for training with a
 free parameter $\beta$. MLP was excluded from further analysis because
 it became clear that it could not converge in this experiment. In this
-case the cumulative metrics seem to have spike periodically in sync
+case the cumulative metrics seem to spike periodically in sync
 with the peaks of the MG function. This seems to suggest that the
 models have greater difficulty predicting large change in slopes than
 in the previous experiment, with the predicted spikes occurring before
@@ -278,14 +271,13 @@ or after the actual point.
  \caption{Sample Curve fittings for MLP, ELM, GRU, and LSTM with
    delays of 1, 5, 10, and 30 respectively. The predicted and true
    values of the functions and slopes are plotted, along with the
-   cumulative absolute differences.}
+   cumulative absolute difference metrics.}
  \label{fig:mg2_func}
    \end{figure}
 
 Figure \ref{fig:mg2_scatter} shows the performance of the models
-compared with each other and the number of parameters they
-suggest. There appears to be a slight improvement and stabilization
-with more neurons similar to the last experiment. Similarly, there
+compared with each other with respect to the number of parameters they
+contain. Similar to the last experiment, any change from increasing parameters seems marginal. Similarly, there
 does not seem to be any great disparity between any of the recurrent
 models, showing how gated models may not be necessary for this task.
 
@@ -304,9 +296,9 @@ models, showing how gated models may not be necessary for this task.
 
 In contrast to experiment 1, there seems to be a large degradation in
 performance when the models are trained to predict further in the
-future, as shown in figure \ref{mg2_save}. This is likely because the models cannot rely on a periodic
+future, as shown in figure \ref{fig:mg2_save}. This is likely because the models cannot rely on a periodic
 pattern in this case, but instead they need to take steps to
-equivocally estimate the parameter and the shape of the curve. Again,
+equivocally estimate the free MG parameter and the shape of the curve. Again,
 no model seems to have an edge at producing predictions further in the future. 
 
   \begin{figure}
@@ -331,14 +323,13 @@ performance in tasks like natural language processing, but fails to make a diffe
 instance of predictive forecasting
 
 In terms of the limitations of this paper, it did not explore gated
-networks with external memory (like the NARX network). Also, due to
-time constraints, I was unable to perform experiments with other MG
+networks with external memory, like the NARX network used in \cite{Farsa}. Also, due to
+time constraints I was unable to perform experiments with other MG
 parameters were randomized. This is unfortunate, as varying $\gamma$
-may have yielded a more diverse effect than varying $\beta$, which
-could have shown yielded different performance in models. Also, due to
+may have shown yielded different effects in the models than varying $\beta$. Also, due to
 the style of implementation, the Elman networks did not use peephole
 connections or gradient clipping like the LSTM and GRU. Finally, there
-was no regularization attempts for any model.
+was no regularization attempts for any model. Adding regularization, such as dropout, could change model behaviour.
 
 For future work, I would like perform a similar analysis with dynamic
 MRI time series images.
@@ -346,16 +337,10 @@ MRI time series images.
  \section{Conclusion}
 I used the MG series to evaluate the performance of gated-recurrent
 networks, the GRU and LSTM, against ELM and MLP networks. I created
-two(three) experiments to test this: training with a MG series with
+two  experiments to test this: training with a MG series with
 static parameters, and training with an MG series with its $\beta$
 parameter randomized. The static experiment showed that all the models performed
-equivalently.
-It is curious why the static MG curve fitting is given as a benchmark
-for so many time series analysis models, as it does test the ability
-to adapt during evaluation of time series than my other
-proposed experiments (rephrase to be correct), since it is clear that
-the MLP can simply create a non-linear approximation. Varying $\beta$
-(and $\gamma$) showed that the MLP was unable generalize with free
+equivalently. Varying $\beta$  showed that the MLP was unable generalize with free
 parameters. Also, there much larger reduction in accuracy for
 predicting distant values, but nonetheless, there was little
 difference between gated and non-gated RNNs within the number
