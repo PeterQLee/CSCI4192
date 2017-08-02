@@ -239,12 +239,73 @@ def time_plot(base):
     plt.savefig('{}/mg1_save.png'.format(outdir))
     #plt.show()
 
-    
+def ttest(base,i,n_test):
+    from scipy.stats import iqr, ttest_1samp
+    spacing=100
+    ident='A'
+    modelnames=['ELM','LSTM','GRU','MLP']
+    M=np.zeros((len(modelnames),4,10))
+    D=np.zeros((len(modelnames),4,10))
+    X=np.zeros((len(modelnames),4,1)) #nmodels, n_steps, data
+    mp={'ELM':0,'LSTM':1,'GRU':2,'MLP':3}
+    #Mrange= [0.07,3.2]
+    #Drange=[0.03,0.425]
+    hp={32:0,64:1,96:2,128:3}
+    z=0
+    train_data=[]
+    test_data=[]
+    p_elm_l=[]
+    data_elm_l=np.zeros((4,10))
+    p_elm_g=[]
+    data_elm_g=np.zeros((4,10))
+    p_neutral=[]
+    data_neutral=np.zeros((4,10))
+    for i in [1,5,10,30]:
+
+        for hidden_nodes in [32,64,96,128]:
+            for mname in modelnames:
+
+                #data=np.load('{}/data{}.npy'.format(base,ident))
+                #predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes)).reshape(1,-1,1)
+
+
+                data=np.load('{}/data{}.npy'.format(base,ident))
+                predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes)).reshape(1,-1,1)
+
+                testy=data[50000+i*100::100].reshape(1,-1)
+                        
+                for C in range(9):
+                    py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C))).reshape(1,-1,1)
+                    predy=np.concatenate((predy,py))
+                    #testy=np.array([]).reshape(-1,train_data[0].shape[1]-i)
+
+                u=np.zeros(predy.shape[0])
+                v=np.zeros(predy.shape[0])
+
+                for j in range(predy.shape[0]):
+                    dp_dt=np.gradient(predy[j].flatten())
+                    dy_dt=np.gradient(testy[0].flatten())
+                    P=predy[j].flatten()
+                    T=testy[0].flatten()
+                    div=P.shape[0]
+                    u[j]=np.sum(np.abs(P-T)/div)
+                    v[j]=np.sum(np.abs(dy_dt-dp_dt)/div)
+
+                #X[mp[mname],hp[hidden_nodes],:]=hidden_nodes
+                M[mp[mname],hp[hidden_nodes],:]=u
+
+                D[mp[mname],hp[hidden_nodes],:]=v
+        h=[np.argmin(np.median(M[a],axis=1)) for a in range(4)]
+        import scipy.stats as stats
+        med=[np.median(M[a,h[a]]) for a in range(4)]
+        print(i,'&'.join(['{:.4f} $\pm$ {:.4f} '.format(med[a],stats.iqr(M[a,h[a]])) for a in range(4)]))
+
+        z+=1
 if __name__=='__main__':
     incrange=50
     hidden_nodes=64
-    #base='/mnt/D2/Chaos/mg/lng/stable2/'
-    base='/Users/Peter/Documents/CSCI4192/Chaos/stable2'
+    base='/mnt/D2/Chaos/mg/lng/stable2/'
+    #base='/Users/Peter/Documents/CSCI4192/Chaos/stable2'
     ident='A'
 
     spacing=100
@@ -273,4 +334,5 @@ if __name__=='__main__':
     print(predy.shape)
     
     #scatter_plot(base,i,predy.shape[0])
-    time_plot(base)
+    #time_plot(base)
+    ttest(base,i,predy.shape[0])

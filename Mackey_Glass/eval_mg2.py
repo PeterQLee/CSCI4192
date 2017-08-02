@@ -19,6 +19,7 @@ def scatter_plot(base,i,n_test):
     base='/mnt/D2/Chaos/mg/lng/beta/'
     train_data=[]
     test_data=[]
+
     for j in range(0,10,1):
         ident=chr(ord('K')+j)
         data=np.load('{}/data{}.npy'.format(base,ident))
@@ -97,9 +98,111 @@ def scatter_plot(base,i,n_test):
     # outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
     # plt.savefig('{}/mg2_scatter_{}.png'.format(outdir,i))
     #plt.show()
-    
+
+def ttest(base,i,n_test):
+    from scipy.stats import iqr, ttest_1samp
+    spacing=100
+    ident='A'
+    modelnames=['ELM','LSTM','GRU']
+    M=np.zeros((len(modelnames),4,10))
+    D=np.zeros((len(modelnames),4,10))
+    X=np.zeros((len(modelnames),4,1)) #nmodels, n_steps, data
+    mp={'ELM':0,'LSTM':1,'GRU':2}#,'MLP':3}
+    #Mrange= [0.07,3.2]
+    #Drange=[0.03,0.425]
+    hp={32:0,64:1,96:2,128:3}
+    z=0
+    base='/mnt/D2/Chaos/mg/lng/beta/'
+    train_data=[]
+    test_data=[]
+    p_elm_l=[]
+    data_elm_l=np.zeros((4,10))
+    p_elm_g=[]
+    data_elm_g=np.zeros((4,10))
+    p_neutral=[]
+    data_neutral=np.zeros((4,10))
+    for i in [1,5,10,30]:
+        for j in range(0,10,1):
+            ident=chr(ord('K')+j)
+            data=np.load('{}/data{}.npy'.format(base,ident))
+            train=data[:len(data)//2]
+            test=data[len(data)//2:]
+            train=train[::spacing]
+            test=test[::spacing]
+            train=train.reshape(1,-1)
+            test=test.reshape(1,-1)
+            train_data.append(train)
+            test_data.append(test)
+
+        for hidden_nodes in [32,64,96,128]:
+            for mname in modelnames:
+
+                #data=np.load('{}/data{}.npy'.format(base,ident))
+                #predy=np.load('{}/{}_{}_H{}.npy'.format(base,mname,i,hidden_nodes)).reshape(1,-1,1)
+
+                #testy=data[50000+i*100::100].reshape(1,-1)
+                predy=np.array([]).reshape(-1,train_data[0].shape[1]-i)
+                testy=np.array([]).reshape(-1,train_data[0].shape[1]-i)
+                for C in range(10):
+                    ident=chr(ord('K')+C)
+                    #dy=np.load('{}/data{}.npy'.format(base,ident)).reshape(1,-1,1)
+                    dy=test_data[C].reshape(1,-1)[:,i:]
+                    py=np.load('{}/{}_{}_H{}{}.npy'.format(base,mname,i,hidden_nodes,chr(ord('a')+C))).reshape(1,-1)
+                    predy=np.concatenate((predy,py))
+
+                    testy=np.concatenate((testy,dy))
+
+                #print('v',predy.shape,testy.shape,base,mname,i,hidden_nodes)
+                u=np.zeros(predy.shape[0])
+                v=np.zeros(predy.shape[0])
+
+                for j in range(predy.shape[0]):
+                    dp_dt=np.gradient(predy[j].flatten())
+                    dy_dt=np.gradient(testy[j].flatten())
+                    P=predy[j].flatten()
+                    T=testy[j].flatten()
+                    div=P.shape[0]
+                    u[j]=np.sum(np.abs(P-T)/div)
+                    v[j]=np.sum(np.abs(dy_dt-dp_dt)/div)
+
+                #X[mp[mname],hp[hidden_nodes],:]=hidden_nodes
+                M[mp[mname],hp[hidden_nodes],:]=u
+
+                D[mp[mname],hp[hidden_nodes],:]=v
+        h=[np.argmin(np.median(M[a],axis=1)) for a in range(3)]
+        import scipy.stats as stats
+        med=[np.median(M[a,h[a]]) for a in range(3)]
+        print(i,'&'.join(['{:.4f} $\pm$ {:.4f} '.format(med[a],stats.iqr(M[a,h[a]])) for a in range(3)]))
+        
+        #Stats
+        # T=np.zeros((3,3))
+        # P=np.zeros((3,3))
+        # Dd=np.zeros((3,3,10))
+        # for a in range(3):
+        #     Dd[a,:]=[M[a,h[a]]-M[j,h[j]] for j in range(3)]
+        #     T[a,:]=[ttest_1samp(M[a,h[a]]-M[j,h[j]],popmean=0).statistic for j in range(3)]
+        #     P[a,:]=[ttest_1samp(M[a,h[a]]-M[j,h[j]],popmean=0).pvalue for j in range(3)]
+
+        # #print(Dd)
+        # #print(stats.norm.cdf(-T))
+        # TP=stats.norm.cdf(-T)
+        # p_elm_l.append(TP[0,1])
+        # data_elm_l[z]=(Dd[0,1])
+        # p_elm_g.append(TP[0,2])
+        # data_elm_g[z]=(Dd[0,2])
+        # p_neutral.append(P[1,2])
+        # data_neutral[z]=Dd[1,2]
+        
+        #print(P)
+        z+=1
+    # print(data_elm_g,p_elm_g)
+    # from brown import EBM
+    # print('neut',EBM.EmpiricalBrownsMethod(data_neutral,p_neutral))
+    # print('lstm',EBM.EmpiricalBrownsMethod(data_elm_l,p_elm_l))
+    # print('gru',EBM.EmpiricalBrownsMethod(data_elm_g,p_elm_g))
 def time_plot(base):
     from scipy.stats import iqr
+
     import seaborn
     spacing=100
     ident='A'
@@ -201,13 +304,13 @@ def time_plot(base):
 if __name__=='__main__':
     incrange=50
     hidden_nodes=32
-    #base='/mnt/D2/Chaos/mg/lng/beta/'
-    base='/Users/Peter/Documents/CSCI4192/Chaos/beta/'
+    base='/mnt/D2/Chaos/mg/lng/beta/'
+    #base='/Users/Peter/Documents/CSCI4192/Chaos/beta/'
     ident='M'
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=1
+    i=30
     mname='LSTM'
     predy=np.load('{}/{}_{}_H{}c.npy'.format(base,mname,i,hidden_nodes))
 
@@ -229,4 +332,5 @@ if __name__=='__main__':
     print(predy.shape)
     
     #scatter_plot(base,i,predy.shape[0])
-    time_plot(base)
+    #time_plot(base)
+    ttest(base,i,predy.shape[0])
