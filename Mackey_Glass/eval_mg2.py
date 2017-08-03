@@ -96,7 +96,7 @@ def scatter_plot(base,i,n_test):
     plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
     plt.xlabel('Number of parameters')
     plt.grid(True)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0,0.03,1,0.95])
     outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
     plt.savefig('{}/mg2_scatter_{}.png'.format(outdir,i))
     #plt.show()
@@ -323,7 +323,7 @@ if __name__=='__main__':
 
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
-    i=30
+    i=5
     mname='LSTM'
     predy=np.load('{}/{}_{}_H{}c.npy'.format(base,mname,i,hidden_nodes))
 
@@ -344,6 +344,6 @@ if __name__=='__main__':
     #box_plot(P,testy,mname,i)
     print(predy.shape)
     
-    #scatter_plot(base,i,predy.shape[0])
+    scatter_plot(base,i,predy.shape[0])
     #time_plot(base)
-    ttest(base,i,predy.shape[0])
+    #ttest(base,i,predy.shape[0])
