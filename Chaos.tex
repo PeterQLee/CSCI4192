@@ -8,7 +8,7 @@
 \usepackage{subcaption}
 \author{Peter Lee}
 \date{\today}
-\title{Examination of gated networks within the Mackey-Glass time series}
+\title{Examination of Gated Recurrent Networks for Forecasting the Mackey-Glass Time series}
 
 \begin{document}
 \maketitle
@@ -45,9 +45,7 @@ the curve during evaluation.
 
 %REDO
 The first experiment showed that the gated RNNs held no consistent improvement in prediction over
-the non-gated RNN within the number of network structures attempted. (The
-MLP performed similar to the other models, as long the number of hidden nodes
-remained low.) Evaluations of distant predictions increased
+the other models within the number of network structures attempted. Evaluations of distant predictions increased
 error for each model, but did not provide any evidence that gated RNNs were superior. The second experiment showed that the MLP was unable to generalize to
 having a randomized parameter. However, the performance between all the
 recurrent networks remained similar. Although predicting distant
@@ -193,12 +191,10 @@ generalizes to a smooth approximation of the curve. Values of these metrics that
 % A) LSTM and GRU do not improve performance
 % B)
 
-Overall, it does not appear that the gated recurrent models outperform
-the other
-models. Within Figure \ref{fig:mg1_scatter} are the results of the
-number of the number of different configurations attempted for each forward
+Within Figure \ref{fig:mg1_scatter} are the results of the
+number of different configurations attempted for each forward
 prediction of $t_0$. Examples of the curves that generated this data
-can be found in Figure \ref{fig:func_evals} in the appendix. Figure \ref{fig:mg1_save} condenses this information by selecting the scores for
+can be found in Figure \ref{fig:func_evals} in the Appendix. Figure \ref{fig:mg1_save} condenses this information by selecting the scores for
 the best performing configuration of the model in terms of
 median. The GRU and LSTM do not
 outperform the ELM since they never exceed the latter model outside
@@ -304,9 +300,8 @@ in slopes.
 
 
   Similar to the first experiment,
-  \ref{fig:mg1_scatter} shows only marginal changes in performance with
-  respect to the number of parameters the possess. Figure \ref{fig:mg2_save} once again 
-  does not show that LSTM and GRU give better performance
+  Figure \ref{fig:mg1_scatter} shows only marginal changes in performance with
+  respect to the number of parameters they possess. Figure \ref{fig:mg2_save} once again  does not show that LSTM and GRU give better performance
   than the ELM. In contrast to experiment 1, it appears that
   the models get much more inaccurate with distant
   predictions, increasing by at least a factor of 40, compared to the factor of 3 in experiment 1. However, the performances for each model seem to
@@ -403,7 +398,7 @@ that were three orders of magnitude better than the ones presented in the static
 prediction task experiments. Also, due to
 time constraints I was unable to perform experiments with other MG
 parameters were randomized. This is unfortunate, as varying $\gamma$
-may have shown yielded different effects in the models than varying $\beta$. Also, due to
+may have shown yielded different effects in the models than varying $\beta$. Furthermore, due to
 the style of implementation, the Elman networks did not use peephole
 connections or gradient clipping like the LSTM and GRU. Finally, there
 was no regularization attempts for any model. Adding regularization, such as dropout, could change model behaviour.
@@ -434,10 +429,19 @@ of configurations attempted on a whole.
 
 \clearpage
 \section*{Appendix}
- Sample evaluations are presented
+ Sample evaluations for experiment 1 are presented
   in Figure \ref{fig:func_evals}.  Note how the cumulative
    differences begin large and increase constantly throughout the
-   evaluation. The inital error is likely due to the hidden nodes being uninitialized.
+   evaluation. The inital error is likely due to the hidden nodes
+   being uninitialized.
+
+Figure \ref{fig:mg2_func} shows sample evaluations for training with a
+free parameter $\beta$. In this
+case the cumulative metrics seem to spike periodically in sync
+with the peaks of the MG function. This seems to suggest that the
+models have greater difficulty predicting large change in slopes than
+in the previous experiment, with the predicted spikes occurring before
+or after the actual point. %Move this bit to harder predictions
 
  \begin{figure}[t]
    \begin{center}
@@ -464,30 +468,34 @@ of configurations attempted on a whole.
       \end{subfigure}
  \end{center}
  \caption{Sample curve fittings for MLP, ELM, GRU, and LSTM with
-   delays of 1, 5, 10, and 30 respectively. The predicted and true
+   delays of 1, 5, 10, and 30 respectively for experiment 1. The predicted and true
    values of the functions and slopes are plotted, along with the
    cumulative absolute differences metrics.}
  \label{fig:func_evals}
 \end{figure}
 
-Figure \ref{fig:mg2_func} shows sample evaluations for training with a
-free parameter $\beta$. MLP was excluded from further analysis because
-it became clear that it could not converge in this experiment. In this
-case the cumulative metrics seem to spike periodically in sync
-with the peaks of the MG function. This seems to suggest that the
-models have greater difficulty predicting large change in slopes than
-in the previous experiment, with the predicted spikes occurring before
-or after the actual point. %Move this bit to harder predictions
 
  \begin{figure}[t]
    \begin{center}
+      \begin{subfigure}{0.48\textwidth}
    \includegraphics[width=.48\textwidth]{figures/MLP_1_mg2.png}
+ \caption{}
+      \end{subfigure}
+      \begin{subfigure}{0.48\textwidth}
    \includegraphics[width=.48\textwidth]{figures/ELM_5_mg2.png}
+ \caption{}
+      \end{subfigure}
+      \begin{subfigure}{0.48\textwidth}
    \includegraphics[width=.48\textwidth]{figures/GRU_10_mg2.png}
+ \caption{}
+      \end{subfigure}
+      \begin{subfigure}{0.48\textwidth}
    \includegraphics[width=.48\textwidth]{figures/LSTM_30_mg2.png}
+ \caption{}
+      \end{subfigure}
  \end{center}
  \caption{Sample Curve fittings for MLP, ELM, GRU, and LSTM with
-   delays of 1, 5, 10, and 30 respectively. The predicted and true
+   delays of 1, 5, 10, and 30 respectively for experiment 2. The predicted and true
    values of the functions and slopes are plotted, along with the
    cumulative absolute difference metrics.}
  \label{fig:mg2_func}
