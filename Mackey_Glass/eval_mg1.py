@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 from mg1 import bisect_set
 #import seaborn as sb
 
@@ -23,7 +24,7 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         dy_dt=np.gradient(testy[i].flatten())
         P=predy[i].flatten()
         T=testy[i].flatten()
-        plt.suptitle('{} delayed by {}'.format(mname,INCREMENT))
+        suptitle=plt.suptitle('{} forward prediction by $t_0$ = {}'.format(mname,INCREMENT))
         sb=plt.subplot(221)
         #plt.title('$x_0$={:.2f}, $\\rho$={:.2f}, $\\beta$={:.2f}, $\\tau$={:.2f}, n={:.2f}'.format(*params))
 
@@ -36,12 +37,12 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         p_t_5,=plt.plot(steps[c:],P[c:],'-',label='p(t+{})'.format(INCREMENT),color='red')
         plt.legend(handles=[x_t_5,p_t_5])
         plt.subplot(222)
-        plt.ylabel('$\\int |x-p|$')
+        plt.ylabel('$\\int^{{t}} |x-p|dt$')
         plt.xlabel('t')
 
         u=np.cumsum(np.abs(T[c:]-P[c:]))/div
-        plt.plot(steps[c:],u,'--',color='blue',label='x(t+{})'.format(INCREMENT))
-        plt.title('$\\int |x-p| = {:.4f}$'.format(
+        plt.plot(steps[c:],u,'-',color='green',label='x(t+{})'.format(INCREMENT))
+        plt.title('$\\int |x-p|dt = {:.4f}$'.format(
             np.sum(np.abs(P[c:]-T[c:]))/div))
         #plt.legend(handles=[x_t_5])
 
@@ -53,16 +54,16 @@ def gradplot(predy,testy,mname,INCREMENT=1):
         plt.legend(handles=[x_t_5,p_t_5])
 
         sb=plt.subplot(224)
-        plt.ylabel('$\\int| \\frac{dx)}{dt}-\\frac{dp}{dt}|$')
+        plt.ylabel('$\\int^{{t}}| \\frac{dx)}{dt}-\\frac{dp}{dt}|dt$')
         t=steps[c:]
         v=np.cumsum(np.abs(dy_dt[c:]-dp_dt[c:]))/div
         
-        x_t_5,=plt.plot(t,v,'--',color='blue',label='x(t+{})'.format(INCREMENT))
+        x_t_5,=plt.plot(t,v,'-',color='green',label='x(t+{})'.format(INCREMENT))
 
-        plt.title('$\\int |\\frac{{dx}}{{dt}}-\\frac{{dp}}{{dt}}| = {:.4f}$'.format(
+        plt.title('$\\int |\\frac{{dx}}{{dt}}-\\frac{{dp}}{{dt}}|dt = {:.4f}$'.format(
             np.sum(np.abs(dy_dt[c:]-dp_dt[c:]))/div))
 
-        plt.tight_layout()
+        plt.tight_layout(rect=[0,0.03,1,0.95])
         outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
         plt.savefig('{}/{}_{}_mg2.png'.format(outdir,mname,INCREMENT),bbox_inches='tight')
         #break
@@ -143,6 +144,7 @@ def scatter_plot(base,i,n_test):
     plt.ylabel('$\\int |x - p|$')
     plt.xlabel('Number of parameters')
     plt.legend()
+    plt.grid(True)
     plt.subplot(212)
 
     for d in range(len(modelnames)):
@@ -156,6 +158,7 @@ def scatter_plot(base,i,n_test):
     plt.xlabel('Number of parameters')
     plt.tight_layout()
     outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+    plt.grid(True)
     plt.savefig('{}/mg1_scatter_{}.png'.format(outdir,i))
     #plt.show()
     
@@ -234,7 +237,7 @@ def time_plot(base):
     plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
     plt.xlabel('$t_0$')
     plt.tight_layout()
-    plt.suptitle('Performance decay with increased $t_0$')
+    plt.suptitle('Performance with respect to $t_0$')
     outdir='/Users/Peter/Documents/CSCI4192/Chaos/figures/'
     plt.savefig('{}/mg1_save.png'.format(outdir))
     #plt.show()
@@ -260,6 +263,9 @@ def ttest(base,i,n_test):
     data_elm_g=np.zeros((4,10))
     p_neutral=[]
     data_neutral=np.zeros((4,10))
+    resM=np.zeros((len(modelnames),4,3)) #models,timesteps,median,q-,q+
+    resD=np.zeros((len(modelnames),4,3)) #models,timesteps,median,q-,q+
+    time_map={1:0,5:1,10:2,30:3}
     for i in [1,5,10,30]:
 
         for hidden_nodes in [32,64,96,128]:
@@ -299,8 +305,44 @@ def ttest(base,i,n_test):
         import scipy.stats as stats
         med=[np.median(M[a,h[a]]) for a in range(4)]
         print(i,'&'.join(['{:.4f} $\pm$ {:.4f} '.format(med[a],stats.iqr(M[a,h[a]])) for a in range(4)]))
+        medD=[np.median(D[a,h[a]]) for a in range(4)]
+        mlow=[stats.iqr(M[a,h[a]],rng=(25,50)) for a in range(4)]
+        mhigh=[stats.iqr(M[a,h[a]],rng=(50,75)) for a in range(4)]
+        dlow=[stats.iqr(D[a,h[a]],rng=(25,50)) for a in range(4)]
+        dhigh=[stats.iqr(D[a,h[a]],rng=(50,75)) for a in range(4)]
+
+        resM[:,time_map[i],0]=med
+        resM[:,time_map[i],1]=mlow
+        resM[:,time_map[i],2]=mhigh
+        resD[:,time_map[i],0]=medD
+        resD[:,time_map[i],1]=dlow
+        resD[:,time_map[i],2]=dhigh
 
         z+=1
+
+    plt.subplot(211)
+    plt.grid(True)
+    color=['blue','green','red','orange']
+    for d in range(len(modelnames)):
+        plt.errorbar([1,5,10,30],resM[d,:,0],yerr=resM[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    plt.ylabel('$\\int |x - p|$')
+    plt.xlabel('$t_0$')
+    plt.legend()
+    plt.subplot(212)
+    plt.grid(True)
+    for d in range(len(modelnames)):
+        plt.errorbar([1,5,10,30],resD[d,:,0],yerr=resD[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    #axes=plt.gca()
+    #axes.set_ylim(Drange)
+    plt.legend()
+    plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
+    plt.xlabel('$t_0$')
+    plt.tight_layout(rect=[0,0.03,1,0.95])
+    plt.suptitle('Performance with respect to $t_0$')
+    outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+    #plt.show()
+    plt.savefig('{}/mg1_save.png'.format(outdir))
+
 if __name__=='__main__':
     incrange=50
     hidden_nodes=64
@@ -311,7 +353,7 @@ if __name__=='__main__':
     spacing=100
     data=np.load('{}/data{}.npy'.format(base,ident))
     i=1
-    mname='LSTM'
+    mname='MLP'
     predy=np.load('{}/{}_{}_H{}a.npy'.format(base,mname,i,hidden_nodes))
     
     #predy=np.transpose(predy,[1,2,0])

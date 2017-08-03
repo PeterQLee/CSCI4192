@@ -73,30 +73,32 @@ def scatter_plot(base,i,n_test):
     d=0
     color=['blue','green','red','orange']
     uf=(elm_parameter,lstm_parameter,gru_parameter)
-    # plt.suptitle('Forward prediction by {}'.format(i))
-    # plt.subplot(211)
-    # for d in range(len(modelnames)):
-    #     print(M[d,:,0],M[d,:,1])
-    #     plt.errorbar([uf[d](j) for j in X[d,:,0]],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    # #axes=plt.gca()
-    # #axes.set_ylim(Mrange)
-    # plt.ylabel('$\\int |x - p|$')
-    # plt.xlabel('Number of parameters')
-    # plt.legend()
-    # plt.subplot(212)
+    plt.suptitle('Forward prediction by {}'.format(i))
+    plt.subplot(211)
+    for d in range(len(modelnames)):
+        print(M[d,:,0],M[d,:,1])
+        plt.errorbar([uf[d](j) for j in X[d,:,0]],M[d,:,0],yerr=M[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    #axes=plt.gca()
+    #axes.set_ylim(Mrange)
+    plt.ylabel('$\\int |x - p|$')
+    plt.xlabel('Number of parameters')
+    plt.legend()
+    plt.grid(True)
+    plt.subplot(212)
 
-    # for d in range(len(modelnames)):
-    #     #plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
-    #     plt.errorbar([uf[d](j) for j in X[d,:,0]],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
-    # #axes=plt.gca()
-    # #axes.set_ylim(Drange)
+    for d in range(len(modelnames)):
+        #plt.errorbar(X[d,:,0],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=['ELM','LSTM','GRU'][d])
+        plt.errorbar([uf[d](j) for j in X[d,:,0]],D[d,:,0],yerr=D[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    #axes=plt.gca()
+    #axes.set_ylim(Drange)
 
-    # plt.legend()
-    # plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
-    # plt.xlabel('Number of parameters')
-    # plt.tight_layout()
-    # outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
-    # plt.savefig('{}/mg2_scatter_{}.png'.format(outdir,i))
+    plt.legend()
+    plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
+    plt.xlabel('Number of parameters')
+    plt.grid(True)
+    plt.tight_layout()
+    outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+    plt.savefig('{}/mg2_scatter_{}.png'.format(outdir,i))
     #plt.show()
 
 def ttest(base,i,n_test):
@@ -111,16 +113,16 @@ def ttest(base,i,n_test):
     #Mrange= [0.07,3.2]
     #Drange=[0.03,0.425]
     hp={32:0,64:1,96:2,128:3}
+    time_map={1:0,5:1,10:2,30:3}
     z=0
     base='/mnt/D2/Chaos/mg/lng/beta/'
     train_data=[]
     test_data=[]
-    p_elm_l=[]
-    data_elm_l=np.zeros((4,10))
-    p_elm_g=[]
-    data_elm_g=np.zeros((4,10))
-    p_neutral=[]
-    data_neutral=np.zeros((4,10))
+
+    resM=np.zeros((len(modelnames),4,3)) #models,timesteps,median,q-,q+
+    resD=np.zeros((len(modelnames),4,3)) #models,timesteps,median,q-,q+
+
+    
     for i in [1,5,10,30]:
         for j in range(0,10,1):
             ident=chr(ord('K')+j)
@@ -173,37 +175,46 @@ def ttest(base,i,n_test):
         import scipy.stats as stats
         med=[np.median(M[a,h[a]]) for a in range(3)]
         print(i,'&'.join(['{:.4f} $\pm$ {:.4f} '.format(med[a],stats.iqr(M[a,h[a]])) for a in range(3)]))
-        
-        #Stats
-        # T=np.zeros((3,3))
-        # P=np.zeros((3,3))
-        # Dd=np.zeros((3,3,10))
-        # for a in range(3):
-        #     Dd[a,:]=[M[a,h[a]]-M[j,h[j]] for j in range(3)]
-        #     T[a,:]=[ttest_1samp(M[a,h[a]]-M[j,h[j]],popmean=0).statistic for j in range(3)]
-        #     P[a,:]=[ttest_1samp(M[a,h[a]]-M[j,h[j]],popmean=0).pvalue for j in range(3)]
+        medD=[np.median(D[a,h[a]]) for a in range(3)]
+        mlow=[stats.iqr(M[a,h[a]],rng=(25,50)) for a in range(3)]
+        mhigh=[stats.iqr(M[a,h[a]],rng=(50,75)) for a in range(3)]
+        dlow=[stats.iqr(D[a,h[a]],rng=(25,50)) for a in range(3)]
+        dhigh=[stats.iqr(D[a,h[a]],rng=(50,75)) for a in range(3)]
 
-        # #print(Dd)
-        # #print(stats.norm.cdf(-T))
-        # TP=stats.norm.cdf(-T)
-        # p_elm_l.append(TP[0,1])
-        # data_elm_l[z]=(Dd[0,1])
-        # p_elm_g.append(TP[0,2])
-        # data_elm_g[z]=(Dd[0,2])
-        # p_neutral.append(P[1,2])
-        # data_neutral[z]=Dd[1,2]
-        
-        #print(P)
-        z+=1
-    # print(data_elm_g,p_elm_g)
-    # from brown import EBM
-    # print('neut',EBM.EmpiricalBrownsMethod(data_neutral,p_neutral))
-    # print('lstm',EBM.EmpiricalBrownsMethod(data_elm_l,p_elm_l))
-    # print('gru',EBM.EmpiricalBrownsMethod(data_elm_g,p_elm_g))
+        resM[:,time_map[i],0]=med
+        resM[:,time_map[i],1]=mlow
+        resM[:,time_map[i],2]=mhigh
+        resD[:,time_map[i],0]=medD
+        resD[:,time_map[i],1]=dlow
+        resD[:,time_map[i],2]=dhigh
+
+    plt.subplot(211)
+    plt.grid(True)
+    color=['blue','green','red','orange']
+    for d in range(len(modelnames)):
+        plt.errorbar([1,5,10,30],resM[d,:,0],yerr=resM[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    plt.ylabel('$\\int |x - p|$')
+    plt.xlabel('$t_0$')
+    plt.legend()
+    plt.subplot(212)
+    plt.grid(True)
+    for d in range(len(modelnames)):
+        plt.errorbar([1,5,10,30],resD[d,:,0],yerr=resD[d,:,1:].T,fmt='--o',color=color[d],label=modelnames[d])
+    #axes=plt.gca()
+    #axes.set_ylim(Drange)
+    plt.legend()
+    plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
+    plt.xlabel('$t_0$')
+    plt.tight_layout(rect=[0,0.03,1,0.95])
+    plt.suptitle('Performance with respect to $t_0$')
+    outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
+    #plt.show()
+    plt.savefig('{}/mg2_save.png'.format(outdir))
+
 def time_plot(base):
     from scipy.stats import iqr
 
-    import seaborn
+    
     spacing=100
     ident='A'
     modelnames=['ELM','LSTM','GRU']
@@ -284,6 +295,7 @@ def time_plot(base):
     plt.ylabel('$\\int |x - p|$')
     plt.xlabel('$t_0$')
     plt.legend()
+    plt.grid(True)
     plt.subplot(212)
 
     for d in range(len(modelnames)):
@@ -295,9 +307,10 @@ def time_plot(base):
     plt.legend()
     plt.ylabel('$\\int| \\frac{dx}{dt}-\\frac{dp)}{dt}|$')
     plt.xlabel('$t_0$')
+    plt.grid(True)
     plt.tight_layout()
     plt.suptitle('Performance decay with increased $t_0$')
-    outdir='/Users/Peter/Documents/CSCI4192/Chaos/figures/'
+    outdir='/home/peter/Documents/CSCI4192/Chaos/figures/'
     plt.savefig('{}/mg2_save.png'.format(outdir))
     #plt.show()
     

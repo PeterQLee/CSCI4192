@@ -5,6 +5,7 @@
 \usepackage[margin=0.5in]{geometry}
 \newcommand{\Z}{\mathbb{Z}}
 \usepackage{hyperref}
+\usepackage{subcaption}
 \author{Peter Lee}
 \date{\today}
 \title{Examination of gated networks within the Mackey-Glass time series}
@@ -35,19 +36,19 @@ In this paper I will be investigating whether gated recurrent networks
 perform better than other non-gated recurrent and non-recurrent models for predictive
 forecasting. More specifically, I will be investigating two types of
 gated recurrent networks, Long Short Term Memory (LSTM) \cite{LSTM}
-and Gated Recurrent Units (GRU) \cite{GRU} and comparing them to the Elman (ELM) recurrent neural network and a Multi-Layer Perceptron (MLP) model. The MLP was constructed in a similar style to the one used by \cite{tr}.
+and Gated Recurrent Units (GRU) \cite{GRU} and comparing them to the Elman (ELM) recurrent neural network and a Multi-Layer Perceptron (MLP) model. The MLP was constructed in a similar style to the one used by \cite{tr}. The hypothesis for these experiments was that the gated recurrent models would outperform the non-gated models.
 
 Two experiments were conducted for forecasting future MG values 1, 5,
 10, and 30 steps ahead. The first is when the models fit to the same MG series with static parameters as \cite{tr,Farsa}. The second experiment fit models to MG series with
 a free parameter to evaluate if the models could adapt to the shape of
 the curve during evaluation. 
 
+%REDO
 The first experiment showed that the gated RNNs held no consistent improvement in prediction over
-the non-gated RNN, regardless of parametric complexity. The
+the non-gated RNN within the number of network structures attempted. (The
 MLP performed similar to the other models, as long the number of hidden nodes
-remained low. Training for distant predictions did not cause much
-increase in error and also did not diverge the
-models from each other in terms of performance. The second experiment showed that the MLP was unable to generalize to
+remained low.) Evaluations of distant predictions increased
+error for each model, but did not provide any evidence that gated RNNs were superior. The second experiment showed that the MLP was unable to generalize to
 having a randomized parameter. However, the performance between all the
 recurrent networks remained similar. Although predicting distant
 values increased error rates much more than the first experiment,
@@ -165,6 +166,7 @@ how well the recurrent models could adapt to the shape of the curve during
 evaluation by essentially estimating the randomized parameter.
 
 \subsection{Evaluation}
+\label{sec-3-3}
 To measure model performance, two metrics were selected. They are
 the cumulative absolute difference (\ref{eq:cumabs}) and the
 cumulative absolute difference of slopes
@@ -174,7 +176,7 @@ in \cite{Farsa}, and generally shows how far off each prediction
 is from the truth. The cumulative absolute difference of slopes is
 unique to this paper, and its purpose is to show whether a model can
 adapt to sharp peaks in the functions, or whether the model just
-generalizes to a smooth approximation of the curve.
+generalizes to a smooth approximation of the curve. Values of these metrics that are closer to 0 indicate better performance.
 
 %Xavier initialization
 \begin{equation}
@@ -192,52 +194,59 @@ generalizes to a smooth approximation of the curve.
 % A) LSTM and GRU do not improve performance
 % B)
 
-Overall, it does not appear that the gated recurrent models the other
+Overall, it does not appear that the gated recurrent models outperform
+the other
 models. Within Figure \ref{fig:mg1_scatter} are the results of the
-number of different configurations attempted for each forward
+number of the number of different configurations attempted for each forward
 prediction of $t_0$. Examples of the curves that generated this data
-can be found in Figure \ref{fig:func_evals} in the appendix. It can be observed that increasing parametric
-complexity only has a marginal effect on each model. Tables
-\ref{table:cumabs1} and \ref{table:Dcumabs1} gives a condensed version
-of the data in Figure \ref{fig:mg1_scatter} by showing the scores for
+can be found in Figure \ref{fig:func_evals} in the appendix. \comment{It can be observed that increasing parametric
+complexity only has a marginal effect on each model.} Figure \ref{fig:mg1_save} condenses this information by selecting the scores for
 the best performing configuration of the model when sorted by
-median. It should be clear from those tables that GRU and LSTM do not
+median. The GRU and LSTM do not
 outperform the ELM since they never exceed the latter model outside
 the iqr. The MLP also seems to be competitive with these models, with
 the exception of $t_0 = 30$, where it possesses an elevated level in
 both cumulative absolute difference and cumulative absolute difference
 in slopes. 
- 
-\begin{table}
-  \begin{tabular}{|l|l|l|l|}
-    \hline
-    $t_0$ & ELM & LSTM & GRU & MLP \\
-    \hline
-1 & 0.0175 $\pm$ 0.0052 & 0.0351 $\pm$ 0.0056 & 0.0230 $\pm$ 0.0051 & 0.0396 $\pm$ 0.0365 \\
-5 & 0.0332 $\pm$ 0.0078 & 0.0379 $\pm$ 0.0086 & 0.0535 $\pm$ 0.0195 & 0.0329 $\pm$ 0.0184 \\
-10 & 0.0341 $\pm$ 0.0134 & 0.0415 $\pm$ 0.0091 & 0.0385 $\pm$ 0.0076 &0.0335 $\pm$ 0.0430 \\
-30 & 0.0714 $\pm$ 0.0130 & 0.0967 $\pm$ 0.0088 & 0.0834 $\pm$ 0.0072 &0.1140 $\pm$ 0.0109 \\
-    \hline
-  \end{tabular}
-  \caption{Experiment 1: Best of median cumulative difference values for each model
-    configuration $\pm$ iqr.}
-  \label{table:cumabs1}
-\end{table}
-%cumabs
 
-\begin{table}
-  \begin{tabular}{|l|l|l|l|l|}
-    \hline
-    $t_0$ & ELM & LSTM & GRU & MLP\\
-    \hline
-1 & 0.0072 $\pm$ 0.0027 &0.0127 $\pm$ 0.0011 &0.0087 $\pm$ 0.0017 &0.0047 $\pm$ 0.0011 \\
-5 & 0.0120 $\pm$ 0.0031 &0.0135 $\pm$ 0.0012 &0.0174 $\pm$ 0.0026 &0.0073 $\pm$ 0.0006 \\
-10 & 0.0092 $\pm$ 0.0035 &0.0112 $\pm$ 0.0023 &0.0119 $\pm$ 0.0014 &0.0071 $\pm$ 0.0016 \\
-30 & 0.0148 $\pm$ 0.0026 &0.0168 $\pm$ 0.0010 &0.0158 $\pm$ 0.0006 &0.0195 $\pm$ 0.0040 \\
-    \caption{Experiment 1: Best of median cumulative difference of slopess for each
-    model configuration $\pm$ iqr.}
-    \label{table:Dcumabs1}
-\end{table}
+% \begin{table}
+%    \begin{centering}
+%   \begin{tabular}{|l|l|l|l|l|}
+%     \hline
+%     $t_0$ & ELM & LSTM & GRU & MLP \\
+%     \hline
+% 1 & 0.0175 $\pm$ 0.0052 & 0.0351 $\pm$ 0.0056 & 0.0230 $\pm$ 0.0051 & 0.0396 $\pm$ 0.0365 \\
+% 5 & 0.0332 $\pm$ 0.0078 & 0.0379 $\pm$ 0.0086 & 0.0535 $\pm$ 0.0195 & 0.0329 $\pm$ 0.0184 \\
+% 10 & 0.0341 $\pm$ 0.0134 & 0.0415 $\pm$ 0.0091 & 0.0385 $\pm$ 0.0076 &0.0335 $\pm$ 0.0430 \\
+% 30 & 0.0714 $\pm$ 0.0130 & 0.0967 $\pm$ 0.0088 & 0.0834 $\pm$ 0.0072 &0.1140 $\pm$ 0.0109 \\
+%     \hline
+%   \end{tabular}
+%   \caption{Experiment 1: Best of median cumulative difference values for each model
+%     configuration $\pm$ iqr.}
+%   \label{table:cumabs1}
+%   \end{centering}
+% \end{table}
+
+% %cumabs
+
+% \begin{table}
+%   \begin{centering}
+%   \begin{tabular}{|l|l|l|l|l|}
+%     \hline
+%     $t_0$ & ELM & LSTM & GRU & MLP\\
+%     \hline
+% 1 & 0.0072 $\pm$ 0.0027 &0.0127 $\pm$ 0.0011 &0.0087 $\pm$ 0.0017 &0.0047 $\pm$ 0.0011 \\
+% 5 & 0.0120 $\pm$ 0.0031 &0.0135 $\pm$ 0.0012 &0.0174 $\pm$ 0.0026 &0.0073 $\pm$ 0.0006 \\
+% 10 & 0.0092 $\pm$ 0.0035 &0.0112 $\pm$ 0.0023 &0.0119 $\pm$ 0.0014 &0.0071 $\pm$ 0.0016 \\
+% 30 & 0.0148 $\pm$ 0.0026 &0.0168 $\pm$ 0.0010 &0.0158 $\pm$ 0.0006
+%                              &0.0195 $\pm$ 0.0040 \\
+%     \hline
+%     \end{tabular}
+%     \caption{Experiment 1: Best of median cumulative difference of slopess for each
+%     model configuration $\pm$ iqr.}
+%     \label{table:Dcumabs1}
+% \end{centering}    
+% \end{table}
 
   % Figure \ref{fig:mg1_scatter} shows the performance of models with
   % respect to the number of parameters they possess. It can be observed
@@ -252,90 +261,110 @@ in slopes.
 
   \begin{figure}
     \begin{center}
-  \includegraphics[width=.48\textwidth]{figures/mg1_scatter_1.png}
-  \includegraphics[width=.48\textwidth]{figures/mg1_scatter_5.png}
-  \includegraphics[width=.48\textwidth]{figures/mg1_scatter_10.png}
-  \includegraphics[width=.48\textwidth]{figures/mg1_scatter_30.png}
+      \begin{subfigure}{.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/mg1_scatter_1.png}
+      \end{subfigure}
+      \begin{subfigure}{.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/mg1_scatter_5.png}
+      \end{subfigure}
+      \begin{subfigure}{.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/mg1_scatter_10.png}
+      \end{subfigure}
+      \begin{subfigure}{.48\textwidth}
+        \includegraphics[width=\textwidth]{figures/mg1_scatter_30.png}
+      \end{subfigure}
        
     \caption{Scatter plots showing model performance with respect to
       number of parameters. Using 10 evaluations with different weight
     initializations, points show the median with vertical bars
-    extending 1 quartile above and below the median. From increasing
-    order of parameters
-    represents the models with hidden nodes of 32, 64, 96, and 128.}
+    extending 1 quartile above and below the median. The models structured with hidden node sizes of 32, 64, 96, and 128 are plotted in regards to their parametric complexity.}
     \label{fig:mg1_scatter}
     \end{center}
   \end{figure}
-
-Alternatively Figure \ref{fig:mg1_save} shows the performance of the models only
-marginally reduced with longer term predictions. No model seems to
-have an edge at producing predictions further in the future,
-indicating that in static curve prediction, an MLP with control points
-seem sufficient.
-
+  
   \begin{figure}
     \begin{center}
-   \includegraphics[width=.96\textwidth]{figures/mg1_save.png}
-       
-    \caption{Scatter plot showing the performance of models with 64 nodes
-      per hidden layer as they are trained to predict values further
-      in time.}
+   \includegraphics[width=.96\textwidth]{figures/mg1_save.png}       
+    \caption{Scatter plot showing the performance trend with each forward prediction task of the ELM, GRU, LSTM, and MLP, each using the configuration (number of hidden nodes) that performed the best. Y-axis shows the performance metrics as described in section \ref{sec-3-3}.}
     \label{fig:mg1_save}
     \end{center}
   \end{figure}
-
 
   \subsection {Experiment 2: Randomized $\beta$}
   % Conclusions
   % A) Exclusion of MLP
   % B) Gated networks still don't have an advantage
   % C) Significantly degraded performance
-\begin{table}
-  \begin{tabular}{|l|l|l|l|}
-    \hline
-    $t_0$ & ELM & LSTM & GRU \\
-    \hline
-    1 & 0.1035 $\pm$ 0.0404 &0.1484 $\pm$ 0.0803 &0.1146 $\pm$ 0.0432 \\
-    5 & 0.7192 $\pm$ 0.2243 &0.7388 $\pm$ 0.1292 &0.6660 $\pm$ 0.2350 \\
-    10 & 1.5261 $\pm$ 0.5824 &1.5610 $\pm$ 0.9035 &1.4345 $\pm$ 0.4915 \\
-    30 & 2.4753 $\pm$ 1.0113 &2.3303 $\pm$ 1.1732 &2.2453 $\pm$ 0.9810 \\
-    \hline
-  \end{tabular}
-  \caption{Experiment 2: Best of median cumulative difference values for each model
-    configuration $\pm$ iqr.}
-  \label{table:cumabs2}
-\end{table}
 
-\begin{table}
-  \begin{tabular}{|l|l|l|l|}
-    \hline
-    $t_0$ & ELM & LSTM & GRU \\
-    \hline
-    1 & 0.0525  $\pm$ 0.0151 &0.0623 $\pm$ 0.0391 &0.0549 $\pm$ 0.0305 \\
-    5 & 0.2599  $\pm$ 0.0587 &0.2626 $\pm$ 0.0893 &0.2244 $\pm$ 0.0954 \\
-    10 & 0.3632  $\pm$ 0.0782 &0.3132 $\pm$ 0.0885 &0.3204 $\pm$ 0.0918 \\
-    30 & 0.2621  $\pm$ 0.0719 &0.2576 $\pm$ 0.1188 &0.2413 $\pm$ 0.1381 \\
-    \hline
-  \end{tabular}
-  \caption{Best of median cumulative difference of slopess for each
-    model configuration $\pm$ iqr.}
-  \label{table:Dcumabs2}
-\end{table}
-                                                          
+  First, the MLP was excluded from further analysis because it became eminently clear that it
+  was unable to adapt to having a free parameter (see Figure
+  \ref{fig:mg2_func_MLP}).
 
-Figure \ref{fig:mg2_scatter} shows the performance of the models
-compared with each other in terms of the number of parameters they
-contain. With $t_0 = 1$, adding parameters seems to give some
-improvement in terms of the median and iqr of the metrics. However, there
-does not seem to be any great disparity between any of the recurrent
-models as a whole, showing how gated models may not be necessary for this task.
+
+  Similar to the first experiment,
+  \ref{fig:mg1_scatter} shows only marginal changes in performance with
+  respect to the number of parameters the possess. Figure \ref{fig:mg2_save} once again 
+  does not show that LSTM and GRU give better performance
+  than the ELM. In contrast to experiment 1, it appears that
+  the models get much more inaccurate with distant
+  predictions, increasing by at least a factor of 40, compared to the factor of 3 in experiment 1. However, the performances for each model seem to
+  degrade at the same rate.
+
+%   \begin{table}[t]
+%       \begin{centering}
+%   \begin{tabular}{|l|l|l|l|}
+%     \hline
+%     $t_0$ & ELM & LSTM & GRU \\
+%     \hline
+%     1 & 0.1035 $\pm$ 0.0404 &0.1484 $\pm$ 0.0803 &0.1146 $\pm$ 0.0432 \\
+%     5 & 0.7192 $\pm$ 0.2243 &0.7388 $\pm$ 0.1292 &0.6660 $\pm$ 0.2350 \\
+%     10 & 1.5261 $\pm$ 0.5824 &1.5610 $\pm$ 0.9035 &1.4345 $\pm$ 0.4915 \\
+%     30 & 2.4753 $\pm$ 1.0113 &2.3303 $\pm$ 1.1732 &2.2453 $\pm$ 0.9810 \\
+%     \hline
+%   \end{tabular}
+%   \caption{Experiment 2: Best of median cumulative difference values for each model
+%     configuration $\pm$ iqr.}
+%   \label{table:cumabs2}
+%   \end{centering}
+% \end{table}
+
+
+% \begin{table}[t]
+%   \begin{centering}
+%   \begin{tabular}{|l|l|l|l|}
+%     \hline
+%     $t_0$ & ELM & LSTM & GRU \\
+%     \hline
+%     1 & 0.0525  $\pm$ 0.0151 &0.0623 $\pm$ 0.0391 &0.0549 $\pm$ 0.0305 \\
+%     5 & 0.2599  $\pm$ 0.0587 &0.2626 $\pm$ 0.0893 &0.2244 $\pm$ 0.0954 \\
+%     10 & 0.3632  $\pm$ 0.0782 &0.3132 $\pm$ 0.0885 &0.3204 $\pm$ 0.0918 \\
+%     30 & 0.2621  $\pm$ 0.0719 &0.2576 $\pm$ 0.1188 &0.2413 $\pm$ 0.1381 \\
+%     \hline
+%   \end{tabular}
+%   \caption{Best of median cumulative difference of slopes for each
+%     model configuration $\pm$ iqr.}4
+%   \label{table:Dcumabs2}
+%   \end{centering}
+% \end{table}
 
   \begin{figure}
     \begin{center}
-  \includegraphics[width=.48\textwidth]{figures/mg2_scatter_1.png}
-  \includegraphics[width=.48\textwidth]{figures/mg2_scatter_5.png}
-  \includegraphics[width=.48\textwidth]{figures/mg2_scatter_10.png}
-  \includegraphics[width=.48\textwidth]{figures/mg2_scatter_30.png}
+   \begin{subfigure}{.48\textwidth}
+     \includegraphics[width=\textwidth]{figures/mg2_scatter_1.png}
+     \caption{}
+   \end{subfigure}
+   \begin{subfigure}{.48\textwidth}
+     \includegraphics[width=\textwidth]{figures/mg2_scatter_5.png}
+     \caption{}
+   \end{subfigure}
+   \begin{subfigure}{.48\textwidth}
+     \includegraphics[width=\textwidth]{figures/mg2_scatter_10.png}
+     \caption{}
+   \end{subfigure}
+   \begin{subfigure}{.48\textwidth}
+     \includegraphics[width=\textwidth]{figures/mg2_scatter_30.png}
+     \caption{}
+   \end{subfigure}
        
     \caption{Scatter plots showing model performance with respect to
       the number of parameters they possess in experiment 2. Leave-one-out evaluation with 10 different MG series was used to generate the data points. All other conventions are the same as Figure \ref{fig:mg1_scatter}.}
@@ -343,25 +372,17 @@ models as a whole, showing how gated models may not be necessary for this task.
     \end{center}
   \end{figure}
 
-In contrast to experiment 1, there seems to be a large degradation in
-performance when the models are trained to predict further in the
-future, as shown in Figure \ref{fig:mg2_save}. This is likely because the models cannot rely on a periodic
-pattern in this case, but instead they need to take steps to
-equivocally estimate the free MG parameter and the shape of the curve. Again,
-no model seems to have an edge at producing predictions further in the future. 
-
   \begin{figure}
     \begin{center}
    \includegraphics[width=.96\textwidth]{figures/mg2_save.png}      
-    \caption{Scatter plot showing the performance of models with 64 nodes
-      per hidden layer as they are trained to predict values further
+    \caption{Scatter plot showing the performance of models  as they are trained to predict values further
       in time with a randomized $\beta$.}
     \label{fig:mg2_save}
     \end{center}
   \end{figure}
 
 \section {Discussion}
-It should be quite clear that the gated recurrent networks do not have
+It should be quite clear that the gated recurrent networks did not have
 an advantage over the non-gated Elman network for this predictive
 forecasting task. This could be because the ability to recall specific 
 information between time steps is less useful for this task, since the
@@ -385,6 +406,8 @@ the style of implementation, the Elman networks did not use peephole
 connections or gradient clipping like the LSTM and GRU. Finally, there
 was no regularization attempts for any model. Adding regularization, such as dropout, could change model behaviour.
 
+As an aside, the cumulative absolute difference in slopes did not seem like a good metric for this experiment. %%
+
 For future work, I would like perform a similar analysis with dynamic
 MRI time series images.
 
@@ -400,19 +423,40 @@ predicting distant values, but nonetheless, there was little
 difference between gated and non-gated RNNs within the number
 of configurations attempted on a whole.
 % \appendices{}
+\clearpage
+\bibliographystyle{abbrv}
+\bibliography{ref}
 
+\clearpage
 \section*{Appendix}
  Sample evaluations are presented
   in Figure \ref{fig:func_evals}.  Note how the cumulative
    differences begin large and increase constantly throughout the
    evaluation. The inital error is likely due to the hidden nodes being uninitialized.
 
- \begin{figure}
+ \begin{figure}[t]
    \begin{center}
-   \includegraphics[width=.48\textwidth]{figures/MLP_1.png}
-   \includegraphics[width=.48\textwidth]{figures/ELM_5.png}
-   \includegraphics[width=.48\textwidth]{figures/GRU_10.png}
-   \includegraphics[width=.48\textwidth]{figures/LSTM_30.png}
+    \begin{subfigure}{0.48\textwidth}
+      % \includegraphics[width=.48\textwidth]{figures/MLP_1.png}
+      \includegraphics[width=\textwidth]{figures/MLP_1.png}
+      \caption{}
+      \label{fig:mg2_func_MLP}
+    \end{subfigure}
+    \begin{subfigure}{0.48\textwidth}
+      % \includegraphics[width=.48\textwidth]{figures/ELM_5.png}
+      \includegraphics[width=\textwidth]{figures/ELM_5.png}
+      \caption{}
+    \end{subfigure}
+      \begin{subfigure}{0.48\textwidth}
+        % \includegraphics[width=.48\textwidth]{figures/GRU_10.png}
+        \includegraphics[width=\textwidth]{figures/GRU_10.png}
+        \caption{}
+      \end{subfigure}
+      \begin{subfigure}{0.48\textwidth}
+        %\includegraphics[width=.48\textwidth]{figures/LSTM_30.png}
+        \includegraphics[width=\textwidth]{figures/LSTM_30.png}
+        \caption{}
+      \end{subfigure}
  \end{center}
  \caption{Sample curve fittings for MLP, ELM, GRU, and LSTM with
    delays of 1, 5, 10, and 30 respectively. The predicted and true
@@ -430,7 +474,7 @@ models have greater difficulty predicting large change in slopes than
 in the previous experiment, with the predicted spikes occurring before
 or after the actual point. %Move this bit to harder predictions
 
- \begin{figure}
+ \begin{figure}[t]
    \begin{center}
    \includegraphics[width=.48\textwidth]{figures/MLP_1_mg2.png}
    \includegraphics[width=.48\textwidth]{figures/ELM_5_mg2.png}
@@ -443,9 +487,6 @@ or after the actual point. %Move this bit to harder predictions
    cumulative absolute difference metrics.}
  \label{fig:mg2_func}
    \end{figure}
-
-\bibliographystyle{abbrv}
-\bibliography{ref}
 
 \end{document}
 

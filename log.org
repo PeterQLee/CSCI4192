@@ -60,3 +60,13 @@ Nonlinear piecewise functionq
 * fix epsilon
 * mention how models are trained
 * period after et al?
+
+
+* Make figure titles similar (e.g. delayed by X, and forward prediction by X)
+* Fix legends in figures
+* Edit Results section to start with a specific thing in mind. 
+Something like there was no notable difference between X and Y.
+Also, could probably include tables for something more conclusive than eyeballing graphs
+
+* Put figures back in appendix?
+* Change cumulative graphs, are they even necessary?
