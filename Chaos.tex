@@ -87,7 +87,6 @@ respectively. \footnote{Implementation code can be found at \url{https://github.
 \mathbf{h^t} = \tanh(W_xx+W_hh^{t-1}+B)
 \label{eq:RNN_h}
 \end{equation}
-
 %Fill in equations
 \begin{equation}
 \begin{split}
@@ -199,9 +198,8 @@ the other
 models. Within Figure \ref{fig:mg1_scatter} are the results of the
 number of the number of different configurations attempted for each forward
 prediction of $t_0$. Examples of the curves that generated this data
-can be found in Figure \ref{fig:func_evals} in the appendix. \comment{It can be observed that increasing parametric
-complexity only has a marginal effect on each model.} Figure \ref{fig:mg1_save} condenses this information by selecting the scores for
-the best performing configuration of the model when sorted by
+can be found in Figure \ref{fig:func_evals} in the appendix. Figure \ref{fig:mg1_save} condenses this information by selecting the scores for
+the best performing configuration of the model in terms of
 median. The GRU and LSTM do not
 outperform the ELM since they never exceed the latter model outside
 the iqr. The MLP also seems to be competitive with these models, with
@@ -263,19 +261,23 @@ in slopes.
     \begin{center}
       \begin{subfigure}{.48\textwidth}
         \includegraphics[width=\textwidth]{figures/mg1_scatter_1.png}
+        \caption{}
       \end{subfigure}
       \begin{subfigure}{.48\textwidth}
         \includegraphics[width=\textwidth]{figures/mg1_scatter_5.png}
+        \caption{}
       \end{subfigure}
       \begin{subfigure}{.48\textwidth}
         \includegraphics[width=\textwidth]{figures/mg1_scatter_10.png}
+        \caption{}
       \end{subfigure}
       \begin{subfigure}{.48\textwidth}
         \includegraphics[width=\textwidth]{figures/mg1_scatter_30.png}
+        \caption{}
       \end{subfigure}
        
-    \caption{Scatter plots showing model performance with respect to
-      number of parameters. Using 10 evaluations with different weight
+    \caption{Scatter plots showing model performance with different
+      network configurations in experiment 1. Using 10 evaluations with different weight
     initializations, points show the median with vertical bars
     extending 1 quartile above and below the median. The models structured with hidden node sizes of 32, 64, 96, and 128 are plotted in regards to their parametric complexity.}
     \label{fig:mg1_scatter}
@@ -366,8 +368,8 @@ in slopes.
      \caption{}
    \end{subfigure}
        
-    \caption{Scatter plots showing model performance with respect to
-      the number of parameters they possess in experiment 2. Leave-one-out evaluation with 10 different MG series was used to generate the data points. All other conventions are the same as Figure \ref{fig:mg1_scatter}.}
+    \caption{Scatter plots showing model performance with different
+      network configurations in experiment 2. Leave-one-out evaluation with 10 different MG series was used to generate the data points. All other conventions are the same as Figure \ref{fig:mg1_scatter}.}
     \label{fig:mg2_scatter}
     \end{center}
   \end{figure}
@@ -406,7 +408,10 @@ the style of implementation, the Elman networks did not use peephole
 connections or gradient clipping like the LSTM and GRU. Finally, there
 was no regularization attempts for any model. Adding regularization, such as dropout, could change model behaviour.
 
-As an aside, the cumulative absolute difference in slopes did not seem like a good metric for this experiment. %%
+As an aside, the cumulative absolute difference in slopes did not have
+much utility for these experiments. They generally followed the same
+trend as cumulative absolute difference, and was a less
+intuitive measure for how well the prediction fit to the true prediction. %%
 
 For future work, I would like perform a similar analysis with dynamic
 MRI time series images.
